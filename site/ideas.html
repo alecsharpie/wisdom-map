@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wisdom Map — The Ideas</title>
+<style>
+  :root {
+    --surface: #fcfcfb;
+    --page: #f9f9f7;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --panel: #ffffff;
+    --c0: #2a78d6; --c1: #008300; --c2: #eda100;
+    --c3: #4a3aa7; --c4: #1baf7a; --c5: #e34948; --c6: #0e93a8;
+    --c7: #a06a1e; --c8: #e87ba4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19;
+      --page: #0d0d0d;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --hairline: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+      --panel: #222221;
+      --c0: #3987e5; --c1: #008300; --c2: #c98500;
+      --c3: #9085e9; --c4: #199e70; --c5: #e66767; --c6: #1490a5;
+      --c7: #b07b2e; --c8: #d55181;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--ink);
+    overflow: hidden;
+  }
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 4;
+    padding: 14px 20px 10px;
+    display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: baseline;
+    pointer-events: none;
+  }
+  header > * { pointer-events: auto; }
+  h1 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
+  header a { color: var(--ink-2); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--border); }
+  .sub { color: var(--ink-2); font-size: 13px; max-width: 56ch; }
+  #legend {
+    position: fixed; left: 20px; bottom: 16px; z-index: 4;
+    display: flex; flex-wrap: wrap; gap: 6px; max-width: min(92vw, 700px);
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 12px 5px 9px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--ink-2); font-size: 13px; cursor: pointer; user-select: none;
+  }
+  .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c, var(--muted)); }
+  .chip.on { border-color: var(--c); color: var(--ink); }
+  #stage { position: fixed; inset: 0; }
+  svg { width: 100%; height: 100%; display: block; }
+  .bubble { cursor: pointer; }
+  .bubble circle.body { fill: var(--panel); stroke: var(--border); stroke-width: 1; transition: opacity 0.15s; }
+  .bubble text { fill: var(--ink-2); pointer-events: none;
+    paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+  .bubble.dim { opacity: 0.16; }
+  .bubble:hover circle.body, .bubble.sel circle.body { stroke: var(--ink-2); }
+  .seg { fill: none; pointer-events: none; }
+  #tip {
+    position: fixed; z-index: 5; max-width: 320px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.14);
+    padding: 10px 12px; font-size: 13px; line-height: 1.45;
+    pointer-events: none; display: none;
+  }
+  #tip b { font-weight: 650; }
+  #tip .meta { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  #panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 6;
+    width: min(420px, 100vw);
+    background: var(--panel); border-left: 1px solid var(--hairline);
+    transform: translateX(102%); transition: transform 0.22s ease;
+    display: flex; flex-direction: column;
+  }
+  #panel.open { transform: none; box-shadow: -12px 0 40px rgba(0,0,0,0.12); }
+  #panel .scroll { overflow-y: auto; padding: 18px 20px 28px; }
+  #panel h2 {
+    font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--muted); margin: 22px 0 6px; padding-top: 14px; border-top: 1px solid var(--hairline);
+  }
+  #panel .idea-label { font-size: 21px; font-weight: 650; letter-spacing: -0.01em; margin: 2px 26px 6px 0; line-height: 1.25; }
+  #panel .idea-desc { color: var(--ink-2); font-size: 14px; }
+  #panel .meta { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+  .bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 10px 0 4px; background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .bar i { display: block; height: 100%; background: var(--c); }
+  .bar i + i { margin-left: 2px; }
+  .shares { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--ink-2); margin-bottom: 4px; }
+  .shares .s { display: inline-flex; align-items: center; gap: 5px; }
+  .shares .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .pass { padding: 10px 10px; margin: 2px -10px 0; border-radius: 10px; cursor: pointer; }
+  .pass:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .pass .who { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; margin-bottom: 3px; }
+  .pass .who .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+  .pass .t { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+  .rank { padding: 11px 10px; margin: 2px -10px 0; border-radius: 10px; cursor: pointer; display: flex; gap: 10px; align-items: baseline; }
+  .rank:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .rank .n { color: var(--muted); font-size: 12px; min-width: 2ch; }
+  .rank .lb { font-size: 14px; }
+  .rank .eff { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  #close {
+    position: absolute; top: 10px; right: 10px;
+    width: 30px; height: 30px; border-radius: 8px; border: none;
+    background: transparent; color: var(--muted); font-size: 17px; cursor: pointer;
+  }
+  #close:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); }
+  #rankBtn {
+    position: fixed; right: 16px; bottom: 16px; z-index: 4;
+    padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--ink-2); font-size: 13px; cursor: pointer;
+  }
+  #rankBtn:hover { color: var(--ink); }
+  #foot {
+    position: fixed; right: 16px; bottom: 58px; z-index: 3;
+    color: var(--muted); font-size: 11.5px; text-align: right; max-width: 40ch;
+  }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; color: var(--muted); z-index: 2; }
+  @media (max-width: 720px) {
+    .sub { display: none; }
+    #foot { display: none; }
+    #panel { top: auto; height: 62vh; width: 100vw; border-left: none; border-top: 1px solid var(--hairline);
+             transform: translateY(103%); }
+    #panel.open { transform: none; }
+    #legend { bottom: 12px; left: 12px; right: 12px; }
+    .chip { font-size: 11.5px; padding: 3px 9px 3px 7px; }
+    #rankBtn { bottom: auto; top: 46px; right: 12px; }
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="loading">Loading the ideas…</div>
+<header>
+  <h1>The Ideas</h1>
+  <a href="./">← the map</a>
+  <a href="lineage.html">the lineage →</a>
+  <div class="sub">The map's passages, clustered into the ideas they share.
+    Each circle is one idea; its ring shows which traditions arrive at it.
+    The more colors in a ring, the more universal the idea.</div>
+</header>
+<div id="legend"></div>
+<div id="tip"></div>
+<button id="rankBtn">✦ most shared ideas</button>
+<div id="foot">Clusters and one-line names are AI-derived (k-means + Haiku).
+  An interpretive curiosity, not a theological claim.</div>
+<aside id="panel">
+  <button id="close" title="Close">✕</button>
+  <div class="scroll" id="panelBody"></div>
+</aside>
+
+<script>
+(async function () {
+  const [ideas, data] = await Promise.all([
+    fetch('ideas.json').then(r => r.json()),
+    fetch('data.json').then(r => r.json()),
+  ]);
+  const CL = ideas.clusters, TRAD = ideas.traditions, P = data.passages;
+  document.getElementById('loading').remove();
+
+  let COLORS = [];
+  function readColors() {
+    COLORS = TRAD.map((_, i) => getComputedStyle(document.documentElement).getPropertyValue('--c' + i).trim());
+  }
+  readColors();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readColors(); render(); });
+
+  const stage = document.getElementById('stage');
+  const tip = document.getElementById('tip');
+  const panel = document.getElementById('panel');
+  const panelBody = document.getElementById('panelBody');
+  const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  let selected = -1;
+  const active = TRAD.map(() => false);   // chip filter: highlight ideas containing tradition
+
+  // ---------- legend ----------
+  const legend = document.getElementById('legend');
+  TRAD.forEach((t, i) => {
+    const n = CL.reduce((a, c) => a + c.counts[i], 0);
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.style.setProperty('--c', `var(--c${i})`);
+    chip.innerHTML = `<span class="dot"></span><b>${t}</b> <span class="n">${n}</span>`;
+    chip.onclick = () => { active[i] = !active[i]; chip.classList.toggle('on', active[i]); applyFilter(); };
+    legend.appendChild(chip);
+  });
+
+  function dimmed(c) {
+    const on = active.some(Boolean);
+    if (!on) return false;
+    return !active.every((a, i) => !a || c.counts[i] > 0);
+  }
+  function applyFilter() {
+    for (const c of CL) c._g.classList.toggle('dim', dimmed(c));
+  }
+
+  // ---------- svg ----------
+  const NS = 'http://www.w3.org/2000/svg';
+  const VB = 1000;
+  let svg;
+  function render() {
+    stage.innerHTML = '';
+    svg = document.createElementNS(NS, 'svg');
+    // leave headroom for the header and legend
+    svg.setAttribute('viewBox', `-70 -80 ${VB + 140} ${VB + 230}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    for (const c of CL) {
+      const g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'bubble');
+      const x = c.x * VB, y = c.y * VB, r = Math.max(c.r * VB, 9);
+      const body = document.createElementNS(NS, 'circle');
+      body.setAttribute('class', 'body');
+      body.setAttribute('cx', x); body.setAttribute('cy', y); body.setAttribute('r', r);
+      g.appendChild(body);
+      // composition ring: stroke-dasharray segments, 2px gaps in surface color
+      const rw = Math.max(Math.min(r * 0.22, 9), 3.5);
+      const rr = r - rw / 2 - 0.5;
+      const C = 2 * Math.PI * rr;
+      let off = 0;
+      c.counts.forEach((n, i) => {
+        if (!n) return;
+        const frac = n / c.n;
+        const seg = document.createElementNS(NS, 'circle');
+        seg.setAttribute('class', 'seg');
+        seg.setAttribute('cx', x); seg.setAttribute('cy', y); seg.setAttribute('r', rr);
+        seg.setAttribute('stroke', COLORS[i]);
+        seg.setAttribute('stroke-width', rw);
+        seg.setAttribute('stroke-dasharray', `${Math.max(frac * C - 2, 0.8)} ${C}`);
+        seg.setAttribute('stroke-dashoffset', -off * C);
+        seg.setAttribute('transform', `rotate(-90 ${x} ${y})`);
+        g.appendChild(seg);
+        off += frac;
+      });
+      // label: wrapped inside the big bubbles, a line beneath the middling ones
+      const inside = r > 38;
+      if (r > 17) {
+        const fs = inside ? Math.min(r / 3.6, 15) : 10.5;
+        const perLine = inside ? Math.max(Math.floor(r / (fs * 0.42)), 8) : 16;
+        const words = c.label.split(' ');
+        const lines = [''];
+        for (const w of words) {
+          const last = lines[lines.length - 1];
+          if (last && (last + ' ' + w).length > perLine) lines.push(w);
+          else lines[lines.length - 1] = (last + ' ' + w).trim();
+        }
+        const text = document.createElementNS(NS, 'text');
+        text.setAttribute('x', x); text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', fs);
+        const y0 = inside ? y - ((lines.length - 1) / 2) * fs * 1.18
+                          : y + r + fs + 3;
+        lines.forEach((ln, li) => {
+          const ts = document.createElementNS(NS, 'tspan');
+          ts.setAttribute('x', x);
+          ts.setAttribute('y', y0 + li * fs * 1.18);
+          ts.setAttribute('dominant-baseline', 'central');
+          ts.textContent = ln;
+          text.appendChild(ts);
+        });
+        g.appendChild(text);
+      }
+      g.addEventListener('pointerenter', e => showTip(c, e));
+      g.addEventListener('pointermove', e => showTip(c, e));
+      g.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+      g.addEventListener('click', () => select(c.id));
+      c._g = g;
+      svg.appendChild(g);
+    }
+    stage.appendChild(svg);
+    applyFilter();
+    if (selected >= 0) CL[selected]._g.classList.add('sel');
+  }
+
+  function showTip(c, e) {
+    const tops = c.counts.map((n, i) => [n, i]).filter(a => a[0]).sort((a, b) => b[0] - a[0]);
+    tip.innerHTML = `<b>${esc(c.label)}</b><div class="meta">${c.n} passages · ` +
+      tops.slice(0, 4).map(([n, i]) => `${TRAD[i]} ${n}`).join(' · ') +
+      (tops.length > 4 ? ' · …' : '') + `</div>`;
+    tip.style.display = 'block';
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - tw - 8) + 'px';
+    tip.style.top = Math.min(e.clientY + 14, innerHeight - th - 8) + 'px';
+  }
+
+  // ---------- panel ----------
+  function select(id, fromHash) {
+    if (selected >= 0) CL[selected]._g.classList.remove('sel');
+    selected = id;
+    tip.style.display = 'none';
+    if (id < 0) { panel.classList.remove('open'); history.replaceState(null, '', location.pathname); return; }
+    CL[id]._g.classList.add('sel');
+    const c = CL[id];
+    if (!fromHash) history.replaceState(null, '', '#i' + id);
+    const tops = c.counts.map((n, i) => [n, i]).filter(a => a[0]).sort((a, b) => b[0] - a[0]);
+    let html = `<div class="idea-label">${esc(c.label)}</div>` +
+      `<div class="idea-desc">${esc(c.desc)}</div>` +
+      `<div class="meta">${c.n} passages · found in ${tops.length} of ${TRAD.length} traditions</div>` +
+      `<div class="bar">` + tops.map(([n, i]) =>
+        `<i style="--c:var(--c${i});flex:${n}"></i>`).join('') + `</div>` +
+      `<div class="shares">` + tops.map(([n, i]) =>
+        `<span class="s" style="--c:var(--c${i})"><span class="dot"></span>${TRAD[i]} ${n}</span>`).join('') + `</div>`;
+    for (const [n, i] of tops) {
+      const members = c.ids.filter(pid => P[pid].t === i).slice(0, 5);
+      html += `<h2>${esc(TRAD[i])}</h2>`;
+      for (const pid of members) {
+        const p = P[pid];
+        html += `<div class="pass" data-p="${pid}" style="--c:var(--c${p.t})">` +
+          `<div class="who"><span class="dot"></span>${esc(data.sources[p.s])} · ${esc(p.ref)}</div>` +
+          `<div class="t">${esc(p.text.length > 190 ? p.text.slice(0, 190) + '…' : p.text)}</div></div>`;
+      }
+    }
+    panelBody.innerHTML = html;
+    panelBody.querySelectorAll('.pass').forEach(el => {
+      el.onclick = () => { location.href = './#p' + el.dataset.p; };
+    });
+    panel.classList.add('open');
+    panelBody.parentElement.scrollTop = 0; panelBody.scrollTop = 0;
+  }
+
+  function showRanked() {
+    if (selected >= 0) CL[selected]._g.classList.remove('sel');
+    selected = -1;
+    history.replaceState(null, '', location.pathname);
+    const ranked = [...CL].sort((a, b) => b.eff - a.eff);
+    let html = `<div class="idea-label">Most shared ideas</div>` +
+      `<div class="idea-desc">Ranked by <em>spread</em> — the effective number of traditions an
+       idea's passages are divided among. 9.0 would mean all nine traditions voice it in equal
+       measure; 1.0 means a single tradition owns it. (An idea can touch 8 traditions yet score
+       low if one tradition dominates the count.)</div>`;
+    html += ranked.map((c, i) => {
+      const tops = c.counts.map((n, ti) => [n, ti]).filter(a => a[0]);
+      return `<div class="rank" data-c="${c.id}"><span class="n">${i + 1}</span>` +
+        `<span class="lb">${esc(c.label)}</span><span class="eff">in ${tops.length} · spread ${c.eff.toFixed(1)}</span></div>`;
+    }).join('');
+    panelBody.innerHTML = html;
+    panelBody.querySelectorAll('.rank').forEach(el => {
+      el.onclick = () => select(+el.dataset.c);
+    });
+    panel.classList.add('open');
+    panelBody.scrollTop = 0;
+  }
+
+  document.getElementById('rankBtn').onclick = showRanked;
+  document.getElementById('close').onclick = () => select(-1);
+  addEventListener('keydown', e => { if (e.key === 'Escape') select(-1); });
+
+  render();
+  const m = location.hash.match(/^#i(\d+)$/);
+  if (m && CL[+m[1]]) select(+m[1], true);
+})();
+</script>
+</body>
+</html>

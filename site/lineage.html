@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lineage of Scripture — Wisdom Map</title>
+<style>
+  :root {
+    --surface: #fcfcfb;
+    --page: #f9f9f7;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --border: rgba(11,11,11,0.12);
+    --panel: #ffffff;
+    --grid: rgba(11,11,11,0.06);
+    --edge: rgba(11,11,11,0.28);
+    /* language families */
+    --f-roots:   #8a877f;
+    --f-sinitic: #c07f00;
+    --f-japonic: #cf4f93;
+    --f-indo:    #1c9250;
+    --f-iranian: #0b938f;
+    --f-semitic: #2f74d0;
+    --f-hellenic:#6d54c8;
+    --f-italic:  #d0562f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19;
+      --page: #0d0d0d;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --hairline: #2c2c2a;
+      --border: rgba(255,255,255,0.14);
+      --panel: #222221;
+      --grid: rgba(255,255,255,0.06);
+      --edge: rgba(255,255,255,0.30);
+      --f-roots:   #9c988d;
+      --f-sinitic: #e0a020;
+      --f-japonic: #e87ab0;
+      --f-indo:    #35b46e;
+      --f-iranian: #26b8b3;
+      --f-semitic: #4f90e6;
+      --f-hellenic:#9483e6;
+      --f-italic:  #e87a56;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--ink); overflow: hidden;
+  }
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 4;
+    padding: 14px 20px 10px;
+    display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: baseline;
+    pointer-events: none;
+  }
+  header > * { pointer-events: auto; }
+  h1 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); font-size: 13px; max-width: 60ch; }
+  a.nav { color: var(--ink-2); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--border); }
+  a.nav:hover { color: var(--ink); }
+  #legend {
+    position: fixed; left: 20px; bottom: 16px; z-index: 4;
+    display: flex; flex-wrap: wrap; gap: 6px; max-width: min(92vw, 720px);
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 12px 5px 9px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--ink-2); font-size: 12.5px; cursor: pointer; user-select: none;
+  }
+  .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c, var(--muted)); }
+  .chip.off { opacity: 0.4; }
+  .chip.off .dot { background: var(--muted); }
+  .chip b { color: var(--ink); font-weight: 600; }
+  #stage { position: fixed; inset: 0; cursor: grab; touch-action: none; }
+  #stage.dragging { cursor: grabbing; }
+  svg { width: 100%; height: 100%; display: block; }
+  .edge { fill: none; stroke: var(--edge); stroke-width: 1.5; opacity: 0.55; }
+  .edge.influence { stroke-dasharray: 3 4; opacity: 0.5; }
+  .edge.lit { opacity: 0.95; stroke-width: 2.4; }
+  .edge-hit { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: help; }
+  .grid line { stroke: var(--grid); stroke-width: 1; }
+  .grid text { fill: var(--muted); font-size: 11px; }
+  .node { cursor: pointer; }
+  .node .box { fill: var(--panel); stroke: var(--fc); stroke-width: 1.5; }
+  .node .accent { fill: var(--fc); }
+  .node .lbl { fill: var(--ink); font-size: 13px; font-weight: 600; }
+  .node .meta { fill: var(--muted); font-size: 10.5px; }
+  .node.root .box { stroke-dasharray: 4 3; }
+  .node.root .lbl { font-style: italic; }
+  /* faded / focused states */
+  .faded { opacity: 0.16; }
+  .edge.faded { opacity: 0.06; }
+  .node .box.hit { stroke-width: 2.4; }
+  #tip {
+    position: fixed; z-index: 5; max-width: 320px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.16);
+    padding: 9px 12px; font-size: 12.5px; line-height: 1.45;
+    pointer-events: none; display: none;
+  }
+  #tip .who { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11.5px; margin-bottom: 3px; }
+  #tip .who .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  #tip b { color: var(--ink); }
+  #panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 6;
+    width: min(400px, 100vw);
+    background: var(--panel); border-left: 1px solid var(--hairline);
+    transform: translateX(102%); transition: transform 0.22s ease;
+    display: flex; flex-direction: column;
+  }
+  #panel.open { transform: none; box-shadow: -12px 0 40px rgba(0,0,0,0.12); }
+  #panel .scroll { overflow-y: auto; padding: 20px 20px 28px; }
+  #panel .who { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin: 2px 26px 12px 0; }
+  #panel .who .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+  #panel .who b { color: var(--ink); font-weight: 650; font-size: 16px; }
+  #panel .facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 13.5px; margin-bottom: 4px; }
+  #panel .facts dt { color: var(--muted); }
+  #panel .facts dd { color: var(--ink); }
+  #panel .blurb { font-size: 14px; line-height: 1.6; color: var(--ink); margin-top: 14px; }
+  #panel .detail { font-size: 13.5px; line-height: 1.62; color: var(--ink-2); margin-top: 10px; }
+  #panel .src { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--muted); }
+  #panel .src a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--border); }
+  #panel .src a:hover { color: var(--ink); }
+  #panel h2 {
+    font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--muted); margin: 22px 0 6px; padding-top: 14px; border-top: 1px solid var(--hairline);
+  }
+  .rel { padding: 9px 10px; margin: 2px -10px; border-radius: 9px; cursor: pointer; }
+  .rel:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .rel .top { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+  .rel .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+  .rel .kind { margin-left: auto; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; flex: none; }
+  .rel .why { color: var(--ink-2); font-size: 12.5px; line-height: 1.5; margin: 5px 0 0 17px; }
+  #panel ul.ideas { list-style: none; margin: 4px 0 0; padding: 0; }
+  #panel ul.ideas li { position: relative; padding: 3px 0 3px 17px; font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+  #panel ul.ideas li::before { content: ""; position: absolute; left: 3px; top: 10px; width: 5px; height: 5px; border-radius: 50%; background: var(--c); }
+  #close {
+    position: absolute; top: 12px; right: 12px;
+    width: 30px; height: 30px; border-radius: 8px; border: none;
+    background: transparent; color: var(--muted); font-size: 17px; cursor: pointer;
+  }
+  #close:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); }
+  #hud { position: fixed; right: 16px; bottom: 16px; z-index: 4; display: flex; flex-direction: column; gap: 6px; }
+  #hud button {
+    width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--ink-2); font-size: 16px; cursor: pointer;
+  }
+  #hud button:hover { color: var(--ink); }
+  #foot {
+    position: fixed; right: 60px; bottom: 16px; z-index: 3;
+    color: var(--muted); font-size: 11.5px; text-align: right; max-width: 40ch;
+  }
+  .ekey { display: inline-flex; gap: 14px; margin-left: 4px; color: var(--muted); font-size: 12px; align-items: center; }
+  .ekey i { display: inline-block; width: 22px; height: 0; border-top: 2px solid var(--edge); vertical-align: middle; margin-right: 5px; }
+  .ekey i.dash { border-top-style: dashed; }
+  @media (max-width: 760px) {
+    .sub { display: none; }
+    #foot { display: none; }
+    #panel { top: auto; height: 64vh; width: 100vw; border-left: none; border-top: 1px solid var(--hairline);
+             transform: translateY(103%); }
+    #panel.open { transform: none; }
+    #legend { bottom: 12px; left: 12px; right: 60px; max-height: 34vh; overflow: auto; }
+  }
+</style>
+</head>
+<body>
+<div id="stage"><svg id="svg"><g id="vp">
+  <g id="grid" class="grid"></g>
+  <g id="edges"></g>
+  <g id="nodes"></g>
+</g></svg></div>
+
+<header>
+  <h1>The Lineage of Scripture</h1>
+  <a class="nav" href="index.html">← the map</a>
+  <div class="sub">A family tree of the world's major religious writings — placed left‑to‑right by
+    date, coloured by the language they were composed in. Solid lines mark descent; dashed lines mark
+    influence across branches. Hover to trace a text's ancestry; click for detail.</div>
+</header>
+
+<div id="legend"></div>
+<div id="tip"></div>
+<div id="hud">
+  <button id="zin" title="Zoom in">+</button>
+  <button id="zout" title="Zoom out">−</button>
+  <button id="zfit" title="Reset view">⌂</button>
+</div>
+<div id="foot">Dates are scholarly ranges and often contested.
+  An interpretive map, not a theological claim.</div>
+
+<aside id="panel">
+  <button id="close" title="Close">✕</button>
+  <div class="scroll" id="panelBody"></div>
+</aside>
+
+<script>
+(function () {
+  // ---------- language families ----------
+  const FAMS = {
+    roots:    { name: "Proto / reconstructed", v: "--f-roots" },
+    sinitic:  { name: "Sinitic (Chinese)",     v: "--f-sinitic" },
+    japonic:  { name: "Japonic",               v: "--f-japonic" },
+    indo:     { name: "Indo-Aryan",            v: "--f-indo" },
+    iranian:  { name: "Iranian",               v: "--f-iranian" },
+    semitic:  { name: "Semitic",               v: "--f-semitic" },
+    hellenic: { name: "Hellenic (Greek)",      v: "--f-hellenic" },
+    italic:   { name: "Italic (Latin)",        v: "--f-italic" },
+  };
+
+  // ---------- the data (nodes) ----------
+  // year: negative = BCE. row: vertical lane. p: parents [id, 'd'(escent)|'i'(nfluence)]
+  const NODES = [
+    // — East Asian —
+    { id:"wuclassics", label:"Five Classics", fam:"sinitic", lang:"Classical Chinese", place:"Zhou China", year:-600, date:"c. 1000–500 BCE", row:1, p:[],
+      blurb:"The Odes, Documents, I Ching, Rites and Spring & Autumn Annals — the pre‑Confucian corpus Confucius is said to have edited and transmitted." },
+    { id:"analects", label:"Analects", fam:"sinitic", lang:"Classical Chinese", place:"State of Lu, China", year:-450, date:"c. 5th–3rd c. BCE", row:0, p:[["wuclassics","i"]],
+      blurb:"Sayings of Confucius gathered by his disciples; the seed text of Confucianism." },
+    { id:"taote", label:"Tao Te Ching", fam:"sinitic", lang:"Classical Chinese", place:"China", year:-350, date:"c. 4th c. BCE", row:2, p:[],
+      blurb:"Attributed to Laozi. The foundational scripture of philosophical Taoism." },
+    { id:"zhuangzi", label:"Zhuangzi", fam:"sinitic", lang:"Classical Chinese", place:"China", year:-300, date:"c. 3rd c. BCE", row:3, p:[["taote","d"]],
+      blurb:"The other great early Taoist book — parables and paradox elaborating the Tao." },
+    { id:"kojiki", label:"Kojiki", fam:"japonic", lang:"Old Japanese / Chinese", place:"Japan", year:712, date:"712 CE", row:0, p:[],
+      blurb:"“Record of Ancient Matters” — Japan's oldest chronicle and a core Shinto text." },
+    { id:"nihonshoki", label:"Nihon Shoki", fam:"japonic", lang:"Classical Chinese", place:"Japan", year:720, date:"720 CE", row:1, p:[["kojiki","i"]],
+      blurb:"The “Chronicles of Japan”, a fuller court history compiled just after the Kojiki." },
+
+    // — Indo-Iranian roots —
+    { id:"pie", label:"Proto-Indo-European", fam:"roots", root:true, lang:"reconstructed", place:"Pontic–Caspian steppe", year:-4000, date:"c. 4500–2500 BCE", row:4, p:[],
+      blurb:"The reconstructed ancestral language and religion behind the Vedic, Iranian, Greek and Latin traditions alike." },
+    { id:"piir", label:"Proto-Indo-Iranian", fam:"roots", root:true, lang:"reconstructed", place:"Central Asian steppe", year:-2500, date:"c. 2500–2000 BCE", row:5, p:[["pie","d"]],
+      blurb:"The common parent of the Vedic and Zoroastrian religions — their oldest hymns are near‑siblings." },
+
+    // — Dharmic —
+    { id:"vedas", label:"The Vedas", fam:"indo", lang:"Vedic Sanskrit", place:"NW India (Punjab)", year:-1500, date:"Rigveda c. 1500–1100 BCE", row:6, p:[["piir","d"]],
+      blurb:"The oldest layer of Hindu scripture: hymns, ritual and, later, the Upanishads. Orally transmitted for a millennium before being written." },
+    { id:"upanishads", label:"Upanishads", fam:"indo", lang:"Sanskrit", place:"India", year:-700, date:"c. 800–200 BCE", row:6, p:[["vedas","d"]],
+      blurb:"The philosophical close of the Vedas — self, Brahman, liberation — that reshaped everything after it." },
+    { id:"gita", label:"Bhagavad Gita", fam:"indo", lang:"Sanskrit", place:"India", year:-200, date:"c. 200 BCE–200 CE", row:6, p:[["upanishads","d"]],
+      blurb:"A dialogue set inside the epic Mahābhārata; the best‑loved distillation of Hindu thought." },
+    { id:"palicanon", label:"Pāli Canon", fam:"indo", lang:"Pāli", place:"India → Sri Lanka", year:-29, date:"written c. 29 BCE", row:7, p:[["upanishads","i"]],
+      blurb:"The Tipiṭaka — the earliest complete Buddhist scripture, from a movement that broke with Vedic authority." },
+    { id:"mahayana", label:"Mahāyāna Sūtras", fam:"indo", lang:"Sanskrit → Chinese", place:"India / Central Asia", year:100, date:"c. 100 BCE–500 CE", row:8, p:[["palicanon","d"]],
+      blurb:"A later wave of Buddhist scripture (Lotus, Heart, Diamond sūtras) that spread across East Asia." },
+    { id:"tibetan", label:"Tibetan Canon", fam:"indo", lang:"Tibetan", place:"Tibet", year:800, date:"c. 8th–14th c. CE", row:7, p:[["mahayana","d"]],
+      blurb:"The Kangyur and Tengyur — Buddhist teaching translated and preserved on the plateau." },
+    { id:"jain", label:"Jain Āgamas", fam:"indo", lang:"Ardhamāgadhī Prakrit", place:"India", year:400, date:"c. 5th c. BCE–5th c. CE", row:7, p:[["vedas","i"]],
+      blurb:"Scripture of Jainism, the other great śramaṇa (renouncer) movement contemporary with early Buddhism." },
+    { id:"guru", label:"Gurū Granth Sāhib", fam:"indo", lang:"Punjabi, Braj, Persian…", place:"Punjab", year:1604, date:"compiled 1604 / 1704", row:6, p:[["upanishads","i"],["quran","i"]],
+      blurb:"The living scripture of Sikhism, a tradition drawing on both Hindu devotion and Islamic monotheism." },
+
+    // — Iranian —
+    { id:"avesta", label:"Avesta", fam:"iranian", lang:"Avestan", place:"Greater Iran", year:-1200, date:"Gāthās c. 1500–1000 BCE", row:9, p:[["piir","d"]],
+      blurb:"Scripture of Zoroastrianism; its oldest hymns, the Gāthās, are ascribed to Zarathustra himself." },
+    { id:"manichaean", label:"Manichaean texts", fam:"iranian", lang:"Syriac, Mid. Persian…", place:"Sasanian Persia", year:250, date:"3rd c. CE", row:9, p:[["avesta","d"],["newtestament","i"]],
+      blurb:"The scriptures of Mani's once‑vast syncretic faith, fusing Zoroastrian, Christian and Buddhist strands. Now extinct." },
+
+    // — Abrahamic —
+    { id:"protosemitic", label:"Proto-Semitic", fam:"roots", root:true, lang:"reconstructed", place:"Near East / Arabia", year:-3750, date:"c. 3750 BCE", row:10, p:[],
+      blurb:"The reconstructed parent of Hebrew, Aramaic, Arabic and Ge'ez — the language spine of the whole Abrahamic branch." },
+    { id:"hebrewbible", label:"Hebrew Bible", fam:"semitic", lang:"Hebrew (+ Aramaic)", place:"Levant", year:-550, date:"c. 1200–165 BCE", row:10, p:[["protosemitic","d"],["avesta","i"]],
+      blurb:"The Tanakh — Torah, Prophets and Writings. Reached its final Torah form under Persian rule, c. 450–350 BCE." },
+    { id:"talmud", label:"Talmud", fam:"semitic", lang:"Hebrew & Aramaic", place:"Galilee / Babylon", year:500, date:"Mishnah 200 CE · Gemara 500 CE", row:10, p:[["hebrewbible","d"]],
+      blurb:"Rabbinic Judaism's vast record of law and debate, built as a commentary layered on the Hebrew Bible." },
+    { id:"septuagint", label:"Septuagint", fam:"hellenic", lang:"Koine Greek", place:"Alexandria", year:-250, date:"3rd–2nd c. BCE", row:11, p:[["hebrewbible","d"]],
+      blurb:"The Greek translation of the Hebrew scriptures — the Bible of the Greek‑speaking world, and of the early Church." },
+    { id:"newtestament", label:"New Testament", fam:"hellenic", lang:"Koine Greek", place:"Eastern Mediterranean", year:80, date:"c. 50–110 CE", row:12, p:[["hebrewbible","d"],["septuagint","i"]],
+      blurb:"The Christian scriptures, written by Jews of the Roman east who read Jesus through the Hebrew Bible and the Septuagint." },
+    { id:"vulgate", label:"Vulgate", fam:"italic", lang:"Latin", place:"Bethlehem / Rome", year:400, date:"c. 400 CE", row:11, p:[["newtestament","d"],["hebrewbible","d"]],
+      blurb:"Jerome's Latin Bible — the West's scripture for a thousand years, the seedbed of Catholic, then Protestant, canons." },
+    { id:"quran", label:"Qur'an", fam:"semitic", lang:"Classical Arabic", place:"Mecca & Medina", year:632, date:"610–632 CE", row:12, p:[["hebrewbible","i"],["newtestament","i"]],
+      blurb:"Islam's scripture, which names the earlier prophets and books of the Jewish and Christian tradition as its forebears." },
+    { id:"hadith", label:"Hadith collections", fam:"semitic", lang:"Arabic", place:"Islamic world", year:850, date:"9th c. CE", row:11, p:[["quran","d"]],
+      blurb:"Compiled reports of Muhammad's words and deeds — second only to the Qur'an in Islamic authority." },
+    { id:"bahai", label:"Bahá'í writings", fam:"semitic", lang:"Arabic & Persian", place:"Persia / Ottoman lands", year:1863, date:"19th c. CE", row:12, p:[["quran","d"]],
+      blurb:"The scriptures of the Bahá'í Faith, which grew out of Shia Islam and claims continuity with all the prophets before it." },
+  ];
+
+  // ---------- core ideas: what each text is about, at a glance ----------
+  const IDEAS = {
+    wuclassics: ["Ritual propriety and the rites (li)", "The Mandate of Heaven", "Cosmic order and change (yin–yang, the I Ching)", "Poetry and history as moral instruction"],
+    analects:   ["Ren — humaneness and benevolence", "Li — ritual and right conduct", "The junzi, the exemplary person", "Filial piety and social harmony", "Govern by moral example, not force"],
+    taote:      ["The Tao — the Way beyond words", "Wu wei — effortless, non-forcing action", "The strength of softness and yielding", "Return to simplicity and nature"],
+    zhuangzi:   ["Spontaneity and inner freedom", "The relativity of every viewpoint", "The equanimity of the sage", "The usefulness of the useless"],
+    kojiki:     ["Origin of the kami and the islands", "Amaterasu, the sun goddess", "Divine descent of the imperial line", "Purity and reverence for nature"],
+    nihonshoki: ["The same creation myths, in fuller form", "An early imperial chronicle", "History written in the Chinese annals style"],
+    pie:        ["A reconstructed sky-father (*Dyḗus)", "Fire, sacrifice and cosmic order", "A herder–warrior–priest society"],
+    piir:       ["Shared gods of the Indo-Iranians", "The sacred drink (soma / haoma)", "Fire cult and cosmic order (ṛta / aša)"],
+    vedas:      ["Hymns to many gods (Agni, Indra, Varuṇa)", "Fire sacrifice (yajña)", "Cosmic and moral order (ṛta)", "The power of sacred sound"],
+    upanishads: ["Ātman (the self) is Brahman (ultimate reality)", "Karma and rebirth", "Mokṣa — liberation from the cycle", "Inner knowledge over outer ritual"],
+    gita:       ["Do your duty (dharma) without attachment to results", "Paths of action, devotion and knowledge", "The divine present within all", "Equanimity in success and failure"],
+    palicanon:  ["The Four Noble Truths", "The Eightfold Path", "Impermanence (anicca)", "Non-self (anattā)", "Nirvāṇa — release from suffering"],
+    mahayana:   ["The bodhisattva vow to free all beings", "Emptiness (śūnyatā)", "Buddha-nature within everyone", "Compassion as the highest aim"],
+    tibetan:    ["Mahāyāna philosophy plus tantra", "Deity yoga and visualization", "Awakening within a single life", "The teacher–student lineage"],
+    jain:       ["Ahiṃsā — radical non-violence", "Anekāntavāda — truth is many-sided", "Asceticism and self-restraint", "Liberation of the soul (jīva)"],
+    guru:       ["One formless God (Ik Onkar)", "Remembrance of the divine Name", "Honest work and sharing (sevā)", "Equality against caste"],
+    avesta:     ["One wise lord, Ahura Mazda", "Truth (aša) struggling against the Lie", "Free moral choice", "Judgment and a final renewal of the world"],
+    manichaean: ["Strict dualism of Light and Darkness", "The soul as light trapped in matter", "Salvation as the release of that light", "Mani as the final prophet"],
+    protosemitic: ["A reconstructed parent tongue, not a text — the root of the Abrahamic scriptural languages"],
+    hebrewbible:["One covenant God", "Law (Torah) and prophecy", "Creation, exodus and exile", "Justice, mercy and wisdom"],
+    talmud:     ["The 'oral Torah' written down", "Law (halakha) and lore (aggada)", "Debate and dissent as a form of devotion"],
+    septuagint: ["The Hebrew scriptures rendered into Greek", "A bridge to the Hellenistic world", "The 'Old Testament' of the early Church"],
+    newtestament:["Jesus as Messiah and Son of God", "Crucifixion and resurrection", "Grace and the Kingdom of God", "A mission to all peoples"],
+    vulgate:    ["The whole Bible in one Latin text", "The shared scripture of Western Christendom", "Bedrock of medieval theology and liturgy"],
+    quran:      ["Tawḥīd — the absolute oneness of God", "Islām — submission to God", "A line of prophets ending with Muhammad", "Divine judgment and mercy"],
+    hadith:     ["The example (sunna) of Muhammad", "A guide to law and daily practice", "Reports graded by their chains of transmission"],
+    bahai:      ["Unity of God", "Unity of religion (progressive revelation)", "Unity of humankind"],
+  };
+
+  // ---------- what actually flows along each edge ("from>to") ----------
+  const WHY = {
+    "wuclassics>analects": "Confucius presented himself as a transmitter, not an inventor — his teaching reads and reinterprets the ancient classics.",
+    "taote>zhuangzi": "Elaborates the Tao Te Ching's terse Way into stories, humour and paradox.",
+    "kojiki>nihonshoki": "A parallel, fuller retelling of the same myths, compiled for the court eight years later.",
+    "pie>piir": "Language-and-religion descent: the parent tongue and its pantheon split, and the Indo-Iranian branch carried them off together.",
+    "piir>vedas": "The Indo-Aryan half of the split brought the fire ritual, the soma cult and gods like Mitra and Varuṇa into India.",
+    "piir>avesta": "The Iranian half carried the same inherited gods, sacred drink and ritual language west into Iran — cognate with the Vedas.",
+    "vedas>upanishads": "Grew straight out of the Vedic corpus as its philosophical culmination — literally the 'end of the Vedas' (Vedānta).",
+    "upanishads>gita": "Distils Upanishadic metaphysics — the self, Brahman, karma — into a practical dialogue on duty and devotion.",
+    "upanishads>palicanon": "Shared world, not descent: Buddhism arose in the same renouncer milieu, keeping karma and rebirth but denying the eternal self and Vedic authority.",
+    "palicanon>mahayana": "Later Buddhist scripture built on the early canon, adding the bodhisattva ideal and the teaching of emptiness.",
+    "mahayana>tibetan": "Mahāyāna philosophy and tantra were translated into Tibetan and preserved as the Kangyur and Tengyur.",
+    "vedas>jain": "A parallel renouncer reform: Jainism kept karma and rebirth but pushed radical non-violence and asceticism against Vedic sacrifice.",
+    "upanishads>guru": "Sikhism absorbed Indic ideas of karma, rebirth and liberation, and the devotional (bhakti) idiom of singing to God.",
+    "quran>guru": "Sikhism also took up Islam's uncompromising monotheism and its rejection of idols and priestly hierarchy.",
+    "avesta>manichaean": "Mani built his cosmology on Zoroastrian dualism — a universe split between Light and Darkness.",
+    "newtestament>manichaean": "Mani also cast himself as an apostle of Jesus, folding Christian figures and scripture into his system.",
+    "protosemitic>hebrewbible": "Language descent: the scriptures were composed in Hebrew, a Semitic tongue.",
+    "avesta>hebrewbible": "Persian-era contact: cosmic good-versus-evil, angels and demons, resurrection and a final judgment enter Second Temple Jewish thought.",
+    "hebrewbible>septuagint": "A translation — the Hebrew scriptures rendered into Greek for the Jews of the diaspora.",
+    "hebrewbible>talmud": "The Talmud is built as commentary and law layered directly onto the Torah.",
+    "hebrewbible>newtestament": "The first Christians were Jews who read Jesus as the fulfilment of the Hebrew prophets and covenant.",
+    "septuagint>newtestament": "The New Testament writers quote scripture in its Greek (Septuagint) wording.",
+    "newtestament>vulgate": "A translation — the Christian scriptures rendered into Latin by Jerome.",
+    "hebrewbible>vulgate": "Jerome also translated the Old Testament into Latin, working from the Hebrew.",
+    "hebrewbible>quran": "The Qur'an retells and revises the stories of Adam, Abraham and Moses, and names the Torah as prior revelation.",
+    "newtestament>quran": "It honours Jesus as a prophet and Mary his mother, and calls the Gospel (Injīl) an earlier scripture from God.",
+    "quran>hadith": "Reports of Muhammad's own words and deeds — second only to the Qur'an in authority.",
+    "quran>bahai": "The Bahá'í Faith grew out of Shia Islam, holding that prophecy continued rather than ended with Muhammad.",
+  };
+  const whyOf = (from, to) => WHY[from + ">" + to] || "";
+
+  // ---------- a deeper paragraph on each text ----------
+  const DETAIL = {
+    wuclassics: "Not one book but a canon — the Book of Odes, Book of Documents, Book of Rites, Book of Changes (I Ching) and the Spring and Autumn Annals. Tradition credits Confucius with editing them, and for two millennia they were the core curriculum of the Chinese literati and the imperial examinations.",
+    analects: "Short sayings and dialogues remembered by Confucius's students after his death in 479 BCE. It never lays out a system; it models a way of living through terse exchanges on ritual, learning, friendship and government, and became the founding text of the Confucian tradition.",
+    taote: "Eighty-one brief, cryptic verses traditionally ascribed to the sage Laozi, though likely gathered over time. It praises the Tao — the nameless 'Way' underlying all things — and counsels acting by not-forcing (wu wei), yielding like water and returning to simplicity.",
+    zhuangzi: "Stories, fables and fragments named for the 4th-century-BCE thinker Zhuangzi. Playful and skeptical where the Tao Te Ching is gnomic, it questions every fixed distinction — the famous butterfly dream — and celebrates spontaneity and freedom from convention.",
+    kojiki: "Compiled in 712 CE at the imperial court, the 'Record of Ancient Matters' gathers myth, legend and genealogy: the birth of the islands, the deeds of the kami, and the descent of the imperial line from the sun-goddess Amaterasu. A foundational source for Shinto.",
+    nihonshoki: "Completed in 720 CE, the 'Chronicles of Japan' retells the same myths in a more elaborate, Chinese-style annalistic history and carries the record into historical times. Written largely in classical Chinese, it was the more official of the two early court chronicles.",
+    pie: "Not a text but a reconstruction: by comparing Sanskrit, Greek, Latin, Persian and other languages, scholars have recovered a common ancestral tongue — and glimpses of its religion, including a sky-father (*Dyḗus ph₂tḗr), fire and sacrifice. From it descend the Vedic, Iranian, Greek and Roman traditions.",
+    piir: "The branch of Proto-Indo-European that moved into Central Asia and split into the Indo-Aryans and the Iranians. Its shared vocabulary — the sacred drink soma / haoma, cosmic order ṛta / aša, the same gods under cognate names — is why the oldest Vedic and Zoroastrian hymns sound like siblings.",
+    vedas: "The oldest layer of Hindu scripture, in four collections (Rig, Yajur, Sama, Atharva) of hymns, chants and ritual formulae. Composed in archaic Vedic Sanskrit and transmitted orally with extraordinary precision for over a thousand years before being written, they centre on fire sacrifice and praise of the gods.",
+    upanishads: "The speculative texts that close the Vedas (hence Vedānta, 'the end of the Vedas'), composed c. 800–200 BCE. Turning from ritual to inward inquiry, they teach that the individual self (ātman) is one with ultimate reality (Brahman), and introduce karma, rebirth and liberation — the framework of later Indian thought.",
+    gita: "A 700-verse dialogue set inside the epic Mahābhārata, in which the god Krishna counsels the warrior Arjuna on the eve of battle. It weaves the paths of action, devotion and knowledge into a single teaching — do your duty without craving its fruits — and became, in the modern era, Hinduism's best-known scripture.",
+    palicanon: "The Tipiṭaka ('three baskets') — monastic rules, discourses of the Buddha, and systematic philosophy — is the complete scripture of Theravāda Buddhism. Preserved orally in the Pāli language and first written in Sri Lanka around 29 BCE, it is the closest record we have of early Buddhist teaching.",
+    mahayana: "A large body of later sūtras (the Lotus, Heart, Diamond and Pure Land among them) that appeared from around the 1st century BCE. They advance the ideal of the bodhisattva, who postpones nirvāṇa to liberate all beings, and the teaching of emptiness — and carried Buddhism across Central and East Asia.",
+    tibetan: "As Buddhism moved onto the Tibetan plateau from the 8th century, its texts were rendered into Tibetan and organized into two great collections: the Kangyur (the Buddha's word) and the Tengyur (commentaries). The canon preserves Mahāyāna philosophy together with the tantric practices of Vajrayāna.",
+    jain: "The Āgamas record the teachings of Mahāvīra (c. 5th century BCE), a contemporary of the Buddha and, like him, a śramaṇa who rejected Vedic sacrifice. Composed in Ardhamāgadhī Prakrit, they set out Jainism's uncompromising non-violence, its ascetic discipline, and its doctrine that truth has many sides.",
+    guru: "Sikhism's scripture and, since 1708, its living Guru. Compiled by Guru Arjan in 1604 and completed by Guru Gobind Singh, it gathers hymns of the Sikh Gurus alongside Hindu and Muslim saints, all set to music. It proclaims one formless God and equality across caste and creed.",
+    avesta: "The scripture of Zoroastrianism, layered like the Vedas: its oldest and most sacred core, the Gāthās, are hymns in Old Avestan ascribed to the prophet Zarathustra himself. It envisions one supreme god, Ahura Mazda, a cosmos torn between truth and the Lie, and a coming renewal of the world.",
+    manichaean: "The teachings of the 3rd-century-CE prophet Mani, who set out to found a universal religion fusing Zoroastrian, Christian and Buddhist elements. Its scriptures describe a stark cosmic war between Light and Darkness and the soul's rescue from matter. Once spread from Rome to China, it is now extinct.",
+    protosemitic: "A reconstruction rather than a text: the common ancestor of the Semitic languages — Akkadian, Hebrew, Aramaic, Arabic, Ge'ez — spoken perhaps in the 4th millennium BCE. It is the linguistic root from which the scriptural languages of the whole Abrahamic family descend.",
+    hebrewbible: "The Tanakh — Torah (law), Nevi'im (prophets) and Ketuvim (writings) — composed across centuries in Hebrew with some Aramaic. Modern scholarship sees the Torah reaching its final form under Persian rule (c. 450–350 BCE). It tells of one God in covenant with Israel, from creation and exodus to exile and return.",
+    talmud: "The central text of Rabbinic Judaism: the Mishnah (a code of oral law, c. 200 CE) plus the Gemara (centuries of Aramaic commentary and debate, completed c. 500 CE). Sprawling and argumentative, it records not settled doctrine but the reasoning — law (halakha) braided with story and lore (aggada).",
+    septuagint: "The translation of the Hebrew scriptures into Koine Greek, begun in Alexandria in the 3rd century BCE for Greek-speaking Jews. It became the Bible most early Christians actually read and quoted, and preserves a slightly different canon and text from the later Hebrew standard.",
+    newtestament: "Twenty-seven works in Koine Greek — four Gospels, Acts, letters (many by Paul) and Revelation — written c. 50–110 CE. Their authors were Jews and God-fearers of the Roman east who proclaimed Jesus as the crucified and risen Messiah and read the Hebrew scriptures as pointing to him.",
+    vulgate: "Jerome's late-4th-century Latin Bible, translating the Old Testament largely from the Hebrew and revising the Latin Gospels. It became the standard Bible of Western Christianity for over a thousand years, shaping its theology and liturgy — and, eventually, the vernacular translations that broke from it.",
+    quran: "Muslims hold the Qur'an to be the literal word of God revealed to Muhammad over c. 610–632 CE in Classical Arabic, and gathered into 114 sūras soon after. It insists on the absolute oneness of God and names Adam, Abraham, Moses and Jesus among the prophets before Muhammad, completing their message.",
+    hadith: "Reports of what Muhammad said, did and approved, transmitted through chains of narrators and sifted for reliability by 9th-century collectors such as Bukhari and Muslim. Together they form the sunna — the Prophet's example — the second source, after the Qur'an, of Islamic law and life.",
+    bahai: "The writings of the Báb and, above all, Baháʼu'lláh (1817–1892), whose movement grew out of Shia Islam in 19th-century Persia. They teach the oneness of God, the essential unity of the great religions as stages of one unfolding revelation, and the unity of humankind.",
+  };
+
+  // ---------- one verified source link per node (Wikipedia entry points) ----------
+  const SRC = {
+    wuclassics: "https://en.wikipedia.org/wiki/Five_Classics",
+    analects: "https://en.wikipedia.org/wiki/Analects",
+    taote: "https://en.wikipedia.org/wiki/Tao_Te_Ching",
+    zhuangzi: "https://en.wikipedia.org/wiki/Zhuangzi_(book)",
+    kojiki: "https://en.wikipedia.org/wiki/Kojiki",
+    nihonshoki: "https://en.wikipedia.org/wiki/Nihon_Shoki",
+    pie: "https://en.wikipedia.org/wiki/Proto-Indo-European_mythology",
+    piir: "https://en.wikipedia.org/wiki/Indo-Iranians",
+    vedas: "https://en.wikipedia.org/wiki/Vedas",
+    upanishads: "https://en.wikipedia.org/wiki/Upanishads",
+    gita: "https://en.wikipedia.org/wiki/Bhagavad_Gita",
+    palicanon: "https://en.wikipedia.org/wiki/Pali_Canon",
+    mahayana: "https://en.wikipedia.org/wiki/Mahayana_sutras",
+    tibetan: "https://en.wikipedia.org/wiki/Tibetan_Buddhist_canon",
+    jain: "https://en.wikipedia.org/wiki/Jain_Agamas",
+    guru: "https://en.wikipedia.org/wiki/Guru_Granth_Sahib",
+    avesta: "https://en.wikipedia.org/wiki/Avesta",
+    manichaean: "https://en.wikipedia.org/wiki/Manichaeism",
+    protosemitic: "https://en.wikipedia.org/wiki/Proto-Semitic_language",
+    hebrewbible: "https://en.wikipedia.org/wiki/Hebrew_Bible",
+    talmud: "https://en.wikipedia.org/wiki/Talmud",
+    septuagint: "https://en.wikipedia.org/wiki/Septuagint",
+    newtestament: "https://en.wikipedia.org/wiki/New_Testament",
+    vulgate: "https://en.wikipedia.org/wiki/Vulgate",
+    quran: "https://en.wikipedia.org/wiki/Quran",
+    hadith: "https://en.wikipedia.org/wiki/Hadith",
+    bahai: "https://en.wikipedia.org/wiki/Bah%C3%A1%CA%BC%C3%AD_literature",
+  };
+
+  const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+
+  // ---------- layout lanes: each lineage flows left→right, ancestors above ----------
+  // (overrides the row hints declared inline above, kept in one place for tuning)
+  const LAYOUT = {
+    // East Asian — Confucian pair stacked above Taoist pair; Shinto shares the top rows far-right
+    wuclassics:0, kojiki:0,
+    analects:1, nihonshoki:1,
+    taote:2,
+    zhuangzi:3,
+    // Indo-Iranian roots
+    pie:4, piir:5,
+    // Hindu chain (one horizontal row)
+    vedas:6, upanishads:6, gita:6,
+    // Buddhist + Jain
+    palicanon:7, jain:7,
+    mahayana:8, tibetan:8,
+    // Iranian, plus the Sikh scripture parked midway between its Hindu and Islamic parents
+    avesta:9, manichaean:9, guru:9,
+    // Abrahamic — Jewish line (top), then Islamic line, with the Greek/Latin Christian
+    // chain on the very bottom row so its self-contained lineage isn't crossed
+    protosemitic:10, hebrewbible:10, talmud:10,
+    quran:11, hadith:11, bahai:11,
+    septuagint:12, newtestament:12, vulgate:12,
+  };
+  NODES.forEach(n => { if (n.id in LAYOUT) n.row = LAYOUT[n.id]; });
+
+  // children map
+  NODES.forEach(n => n.kids = []);
+  NODES.forEach(n => n.p.forEach(([pid, t]) => { if (byId[pid]) byId[pid].kids.push([n.id, t]); }));
+
+  // ---------- time scale (piecewise linear) ----------
+  const ANCH = [[-4000,40],[-3000,170],[-2000,300],[-1500,380],[-1000,470],[-500,590],[-200,690],
+                [1,780],[300,900],[500,1010],[800,1180],[1100,1320],[1600,1520],[1900,1660]];
+  function xFor(y) {
+    if (y <= ANCH[0][0]) return ANCH[0][1];
+    if (y >= ANCH[ANCH.length-1][0]) return ANCH[ANCH.length-1][1];
+    for (let i = 1; i < ANCH.length; i++) {
+      if (y <= ANCH[i][0]) {
+        const [y0,x0] = ANCH[i-1], [y1,x1] = ANCH[i];
+        return x0 + (x1-x0) * (y-y0)/(y1-y0);
+      }
+    }
+  }
+  const ROW_H = 92, ROW_TOP = 64;
+  const yFor = row => ROW_TOP + row * ROW_H;
+
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const el = (t, a) => { const e = document.createElementNS(SVGNS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const css = getComputedStyle(document.documentElement);
+  const famColor = f => css.getPropertyValue(FAMS[f].v).trim();
+
+  const gGrid = document.getElementById("grid");
+  const gEdges = document.getElementById("edges");
+  const gNodes = document.getElementById("nodes");
+
+  // ---------- grid (time axis) ----------
+  const TICKS = [[-4000,"4000 BCE"],[-2000,"2000 BCE"],[-1000,"1000 BCE"],[-500,"500 BCE"],
+                 [1,"1 CE"],[500,"500 CE"],[1000,"1000 CE"],[1500,"1500 CE"],[1900,"1900 CE"]];
+  const GRID_TOP = 40, GRID_BOT = yFor(12) + 46;
+  TICKS.forEach(([y,lab]) => {
+    const x = xFor(y);
+    gGrid.appendChild(el("line", { x1:x, y1:GRID_TOP, x2:x, y2:GRID_BOT }));
+    const t = el("text", { x:x+4, y:GRID_TOP+12 }); t.textContent = lab; gGrid.appendChild(t);
+  });
+
+  // ---------- nodes ----------
+  const NODE_H = 42, PAD_X = 11;
+  NODES.forEach(n => {
+    const g = el("g", { class: "node" + (n.root ? " root" : "") });
+    g.style.setProperty("--fc", famColor(n.fam));
+    g.dataset.id = n.id;
+    const box = el("rect", { class:"box", rx:9, ry:9, height:NODE_H });
+    const accent = el("rect", { class:"accent", width:4, height:NODE_H-2, y:1, rx:2 });
+    const lbl = el("text", { class:"lbl", x:PAD_X, y:17 }); lbl.textContent = n.label;
+    const meta = el("text", { class:"meta", x:PAD_X, y:32 }); meta.textContent = n.date;
+    g.append(box, accent, lbl, meta);
+    gNodes.appendChild(g);
+    n._g = g; n._box = box; n._accent = accent;
+  });
+  // measure widths, then position
+  NODES.forEach(n => {
+    const wLbl = n._g.querySelector(".lbl").getComputedTextLength();
+    const wMeta = n._g.querySelector(".meta").getComputedTextLength();
+    n.w = Math.max(wLbl, wMeta) + PAD_X + 12;
+    n.x = xFor(n.year);
+    n.y = yFor(n.row) - NODE_H/2;
+    n.yc = yFor(n.row);
+    n._g.setAttribute("transform", `translate(${n.x},${n.y})`);
+    n._box.setAttribute("width", n.w);
+  });
+
+  // ---------- edges ----------
+  const edgeEls = [];
+  NODES.forEach(n => n.p.forEach(([pid, t]) => {
+    const par = byId[pid]; if (!par) return;
+    const x1 = par.x + par.w, y1 = par.yc, x2 = n.x, y2 = n.yc;
+    const dx = Math.max(30, (x2 - x1) * 0.5);
+    const d = `M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`;
+    const p = el("path", { class: "edge" + (t === "i" ? " influence" : ""), d });
+    const hit = el("path", { class: "edge-hit", d });
+    hit.dataset.from = pid; hit.dataset.to = n.id;
+    gEdges.appendChild(p); gEdges.appendChild(hit);
+    edgeEls.push({ el: p, hit, from: pid, to: n.id, type: t });
+  }));
+
+  // ---------- lineage tracing ----------
+  function ancestors(id, set) { set = set || new Set(); byId[id].p.forEach(([pid]) => { if (!set.has(pid)) { set.add(pid); ancestors(pid, set); } }); return set; }
+  function descendants(id, set) { set = set || new Set(); byId[id].kids.forEach(([kid]) => { if (!set.has(kid)) { set.add(kid); descendants(kid, set); } }); return set; }
+
+  const famOn = Object.fromEntries(Object.keys(FAMS).map(f => [f, true]));
+
+  function applyStyles(focus) {
+    // focus: null | { node: id } | { edge: {from,to} }
+    let keep = null, litEdge = null;
+    if (focus && focus.node) {
+      keep = new Set([focus.node]);
+      ancestors(focus.node).forEach(x => keep.add(x));
+      descendants(focus.node).forEach(x => keep.add(x));
+    } else if (focus && focus.edge) {
+      keep = new Set([focus.edge.from, focus.edge.to]);
+      litEdge = focus.edge;
+    }
+    NODES.forEach(n => {
+      const famVisible = famOn[n.fam];
+      const inFocus = !keep || keep.has(n.id);
+      n._g.classList.toggle("faded", !(famVisible && inFocus));
+      n._box.classList.toggle("hit", !!(focus && focus.node === n.id));
+    });
+    edgeEls.forEach(e => {
+      const famVisible = famOn[byId[e.from].fam] && famOn[byId[e.to].fam];
+      const inFocus = !keep || (keep.has(e.from) && keep.has(e.to));
+      e.el.classList.toggle("faded", !(famVisible && inFocus));
+      e.el.classList.toggle("lit", !!(litEdge && e.from === litEdge.from && e.to === litEdge.to));
+    });
+  }
+  const focusNode = id => applyStyles(id ? { node: id } : null);
+
+  // ---------- pan / zoom ----------
+  const stage = document.getElementById("stage");
+  const svg = document.getElementById("svg");
+  const vp = document.getElementById("vp");
+  let k = 1, tx = 0, ty = 0, W = 0, H = 0;
+  const CONTENT_W = 1800, CONTENT_H = GRID_BOT + 20;
+
+  function apply() { vp.setAttribute("transform", `translate(${tx},${ty}) scale(${k})`); }
+  function fit() {
+    W = innerWidth; H = innerHeight;
+    const m = 60;
+    k = Math.min((W - 2*m) / CONTENT_W, (H - 140) / CONTENT_H);
+    k = Math.min(k, 1.1);
+    tx = (W - CONTENT_W * k) / 2;
+    ty = Math.max(84, Math.min((H - CONTENT_H * k) / 2, 150));
+    apply();
+  }
+  function zoomAt(cx, cy, f) {
+    const nk = Math.max(0.3, Math.min(4, k * f)); f = nk / k;
+    tx = cx - (cx - tx) * f; ty = cy - (cy - ty) * f; k = nk; apply();
+  }
+
+  let dragging = false, moved = false, lx = 0, ly = 0;
+  const pointers = new Map(); let pinchD = 0;
+  stage.addEventListener("pointerdown", e => {
+    stage.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 2) { const [a,b] = [...pointers.values()]; pinchD = Math.hypot(a[0]-b[0], a[1]-b[1]); }
+    dragging = true; moved = false; lx = e.clientX; ly = e.clientY; stage.classList.add("dragging");
+  });
+  stage.addEventListener("pointermove", e => {
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 2) {
+      const [a,b] = [...pointers.values()];
+      const d = Math.hypot(a[0]-b[0], a[1]-b[1]);
+      const mx = (a[0]+b[0])/2, my = (a[1]+b[1])/2;
+      if (pinchD > 0) zoomAt(mx, my, d / pinchD);
+      pinchD = d; moved = true; return;
+    }
+    if (dragging) {
+      const dx = e.clientX - lx, dy = e.clientY - ly;
+      if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+      tx += dx; ty += dy; lx = e.clientX; ly = e.clientY; apply();
+    }
+  });
+  stage.addEventListener("pointerup", e => { pointers.delete(e.pointerId); stage.classList.remove("dragging"); dragging = false; pinchD = 0; });
+  stage.addEventListener("pointercancel", e => { pointers.delete(e.pointerId); dragging = false; });
+  stage.addEventListener("wheel", e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0016)); }, { passive:false });
+  document.getElementById("zin").addEventListener("click", () => zoomAt(W/2, H/2, 1.4));
+  document.getElementById("zout").addEventListener("click", () => zoomAt(W/2, H/2, 1/1.4));
+  document.getElementById("zfit").addEventListener("click", () => { select(null); fit(); });
+  addEventListener("resize", fit);
+
+  // ---------- hover tooltip + lineage ----------
+  const tip = document.getElementById("tip");
+  let selected = null;
+  // Hit-test by cursor position, not e.target: while a pointer is captured on #stage
+  // (during a drag/click) events retarget to the stage, so e.target is never the node.
+  function elAt(e, sel) {
+    const t = document.elementFromPoint(e.clientX, e.clientY);
+    return t && t.closest ? t.closest(sel) : null;
+  }
+  function nodeFromEvent(e) { const g = elAt(e, ".node"); return g ? byId[g.dataset.id] : null; }
+  function edgeFromEvent(e) {
+    const h = elAt(e, ".edge-hit");
+    return h ? edgeEls.find(x => x.from === h.dataset.from && x.to === h.dataset.to) : null;
+  }
+  function placeTip(e) {
+    tip.style.display = "block";
+    const bw = tip.offsetWidth, bh = tip.offsetHeight;
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - bw - 8) + "px";
+    tip.style.top = (e.clientY + 16 + bh > innerHeight ? e.clientY - bh - 10 : e.clientY + 16) + "px";
+  }
+  stage.addEventListener("pointermove", e => {
+    if (dragging || pointers.size) return;
+    const n = nodeFromEvent(e);
+    if (n) {
+      if (!selected) focusNode(n.id);
+      tip.innerHTML = `<div class="who" style="--c:${famColor(n.fam)}"><span class="dot"></span>${FAMS[n.fam].name} · ${escapeHtml(n.lang)}</div><b>${escapeHtml(n.label)}</b> · ${escapeHtml(n.place)} · ${escapeHtml(n.date)}`;
+      placeTip(e); return;
+    }
+    const ed = edgeFromEvent(e);
+    if (ed) {
+      if (!selected) applyStyles({ edge: ed });
+      const a = byId[ed.from], b = byId[ed.to];
+      tip.innerHTML = `<div class="who"><span class="dot" style="background:${famColor(a.fam)}"></span>${escapeHtml(a.label)} → ${escapeHtml(b.label)}` +
+        ` <b style="margin-left:4px;font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:.05em;color:var(--muted)">${KIND[ed.type]}</b></div>` +
+        `${escapeHtml(whyOf(ed.from, ed.to))}`;
+      placeTip(e); return;
+    }
+    if (!selected) applyStyles(null);
+    tip.style.display = "none";
+  });
+  stage.addEventListener("pointerleave", () => { tip.style.display = "none"; if (!selected) applyStyles(null); });
+  stage.addEventListener("pointerup", e => { if (!moved) { const n = nodeFromEvent(e); select(n ? n.id : null); } });
+
+  // ---------- detail panel ----------
+  const panel = document.getElementById("panel");
+  const body = document.getElementById("panelBody");
+  const escapeHtml = s => String(s).replace(/[&<>]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[c]));
+  const KIND = { d: "descent", i: "influence" };
+
+  function relRow(displayId, fromId, toId, type, dir) {
+    const q = byId[displayId];
+    const why = whyOf(fromId, toId);
+    return `<div class="rel" data-id="${displayId}">` +
+      `<div class="top"><span class="dot" style="background:${famColor(q.fam)}"></span>` +
+      `<span>${escapeHtml(q.label)}</span><span class="kind">${dir} · ${KIND[type]}</span></div>` +
+      (why ? `<div class="why">${escapeHtml(why)}</div>` : "") + `</div>`;
+  }
+  function select(id) {
+    selected = id;
+    tip.style.display = "none";
+    history.replaceState(null, "", id ? "#" + id : location.pathname);
+    focusNode(id);
+    if (!id) { panel.classList.remove("open"); return; }
+    const n = byId[id];
+    const parents = n.p.map(([pid, t]) => relRow(pid, pid, n.id, t, "from")).join("");
+    const kids = n.kids.map(([kid, t]) => relRow(kid, n.id, kid, t, "to")).join("");
+    const ideas = (IDEAS[n.id] && IDEAS[n.id].length)
+      ? `<h2>Core ideas</h2><ul class="ideas" style="--c:${famColor(n.fam)}">` +
+        IDEAS[n.id].map(x => `<li>${escapeHtml(x)}</li>`).join("") + `</ul>`
+      : "";
+    body.innerHTML =
+      `<div class="who" style="--c:${famColor(n.fam)}"><span class="dot"></span><b>${escapeHtml(n.label)}</b></div>` +
+      `<dl class="facts">` +
+        `<dt>Language</dt><dd>${escapeHtml(n.lang)} <span style="color:var(--muted)">(${FAMS[n.fam].name})</span></dd>` +
+        `<dt>Origin</dt><dd>${escapeHtml(n.place)}</dd>` +
+        `<dt>Date</dt><dd>${escapeHtml(n.date)}</dd>` +
+      `</dl>` +
+      `<div class="blurb">${escapeHtml(n.blurb)}</div>` +
+      (DETAIL[n.id] ? `<div class="detail">${escapeHtml(DETAIL[n.id])}</div>` : "") +
+      ideas +
+      (parents ? `<h2>Descends from</h2>${parents}` : "") +
+      (kids ? `<h2>Gives rise to</h2>${kids}` : "") +
+      (SRC[n.id] ? `<div class="src">Further reading: <a href="${SRC[n.id]}" target="_blank" rel="noopener">${escapeHtml(n.label)} on Wikipedia ↗</a></div>` : "");
+    body.querySelectorAll(".rel").forEach(r => r.addEventListener("click", () => select(r.dataset.id)));
+    panel.classList.add("open");
+    body.parentElement.scrollTop = 0;
+  }
+  document.getElementById("close").addEventListener("click", () => select(null));
+  addEventListener("keydown", e => { if (e.key === "Escape") select(null); });
+
+  // ---------- legend ----------
+  const legend = document.getElementById("legend");
+  Object.entries(FAMS).forEach(([f, info]) => {
+    if (!NODES.some(n => n.fam === f)) return;
+    const chip = document.createElement("button");
+    chip.className = "chip";
+    chip.style.setProperty("--c", famColor(f));
+    chip.innerHTML = `<span class="dot"></span><b>${info.name}</b>`;
+    chip.addEventListener("click", () => {
+      famOn[f] = !famOn[f];
+      chip.classList.toggle("off", !famOn[f]);
+      focusNode(selected);
+    });
+    legend.appendChild(chip);
+  });
+  const key = document.createElement("span");
+  key.className = "ekey";
+  key.innerHTML = `<span><i></i>descent</span><span><i class="dash"></i>influence</span>`;
+  legend.appendChild(key);
+
+  // ---------- go ----------
+  fit();
+  const h = location.hash.replace("#", "");
+  if (h && byId[h]) select(h);
+})();
+</script>
+</body>
+</html>
