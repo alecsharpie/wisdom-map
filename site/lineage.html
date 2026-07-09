@@ -430,26 +430,30 @@
   // ---------- layout lanes: each lineage flows left→right, ancestors above ----------
   // (overrides the row hints declared inline above, kept in one place for tuning)
   const LAYOUT = {
-    // East Asian — Confucian pair stacked above Taoist pair; Shinto shares the top rows far-right
+    // East Asian — the Confucian line is a clean 3-step staircase, the Taoist
+    // pair sits untangled below it; Shinto shares the top rows far to the right.
     wuclassics:0, kojiki:0,
-    analects:1, nihonshoki:1,
-    taote:2,
-    zhuangzi:3, mencius:4,
-    // Indo-Iranian roots
-    pie:4, piir:5,
-    // Hindu chain (one horizontal row)
+    analects:1,  nihonshoki:1,
+    mencius:2,
+    taote:3,
+    zhuangzi:4,
+    // Indo-Iranian roots — the two reconstructed tongues share one flat row, far left
+    pie:5, piir:5,
+    // Hindu spine (one horizontal row)
     vedas:6, upanishads:6, gita:6,
     // Buddhist + Jain
     palicanon:7, jain:7,
     mahayana:8, tibetan:8,
     // Iranian, plus the Sikh scripture parked midway between its Hindu and Islamic parents
     avesta:9, manichaean:9, guru:9,
-    // Abrahamic — Jewish line (top), then Islamic line, with the Greek/Latin Christian
-    // chain on the very bottom row so its self-contained lineage isn't crossed
+    // Abrahamic — Jewish spine (top), then the Islamic line, then the self-contained
+    // Christian chain, with the Latin Vulgate dropped onto its own row so its two
+    // converging descent edges read cleanly.
     protosemitic:10, hebrewbible:10, talmud:10,
-    quran:11, hadith:11, bahai:11,
-    septuagint:12, newtestament:12, vulgate:12,
-    rumi:13,
+    quran:11, hadith:11,
+    septuagint:12, newtestament:12, bahai:12,
+    vulgate:13,
+    rumi:14,
   };
   NODES.forEach(n => { if (n.id in LAYOUT) n.row = LAYOUT[n.id]; });
 
@@ -458,8 +462,10 @@
   NODES.forEach(n => n.p.forEach(([pid, t]) => { if (byId[pid]) byId[pid].kids.push([n.id, t]); }));
 
   // ---------- time scale (piecewise linear) ----------
+  const XSCALE = 1.5;  // horizontal stretch of the time axis — widens the whole graph
   const ANCH = [[-4000,40],[-3000,170],[-2000,300],[-1500,380],[-1000,470],[-500,590],[-200,690],
-                [1,780],[300,900],[500,1010],[800,1180],[1100,1320],[1600,1520],[1900,1660]];
+                [1,780],[300,900],[500,1010],[800,1180],[1100,1320],[1600,1520],[1900,1660]]
+                .map(([y,x]) => [y, x * XSCALE]);
   function xFor(y) {
     if (y <= ANCH[0][0]) return ANCH[0][1];
     if (y >= ANCH[ANCH.length-1][0]) return ANCH[ANCH.length-1][1];
@@ -485,7 +491,8 @@
   // ---------- grid (time axis) ----------
   const TICKS = [[-4000,"4000 BCE"],[-2000,"2000 BCE"],[-1000,"1000 BCE"],[-500,"500 BCE"],
                  [1,"1 CE"],[500,"500 CE"],[1000,"1000 CE"],[1500,"1500 CE"],[1900,"1900 CE"]];
-  const GRID_TOP = 40, GRID_BOT = yFor(13) + 46;
+  const MAX_ROW = Math.max(...NODES.map(n => n.row));
+  const GRID_TOP = 40, GRID_BOT = yFor(MAX_ROW) + 46;
   TICKS.forEach(([y,lab]) => {
     const x = xFor(y);
     gGrid.appendChild(el("line", { x1:x, y1:GRID_TOP, x2:x, y2:GRID_BOT }));
@@ -569,7 +576,7 @@
   const svg = document.getElementById("svg");
   const vp = document.getElementById("vp");
   let k = 1, tx = 0, ty = 0, W = 0, H = 0;
-  const CONTENT_W = 1800, CONTENT_H = GRID_BOT + 20;
+  const CONTENT_W = 1800 * XSCALE, CONTENT_H = GRID_BOT + 20;
 
   function apply() { vp.setAttribute("transform", `translate(${tx},${ty}) scale(${k})`); }
   function fit() {
