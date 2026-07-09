@@ -141,9 +141,9 @@ flowchart TB
   end
   subgraph SHIP["  Static files · shipped with the site  "]
     direction TB
-    DATA["data.json · 2.9 MB&lt;br/&gt;text, gist, x/y, neighbours"]:::file
-    IJSON["ideas.json · 37 kB&lt;br/&gt;60 named clusters"]:::file
-    BIN["search.bin · 1.6 MB&lt;br/&gt;int8 vectors + scales"]:::file
+    DATA["data.json · 3.5 MB&lt;br/&gt;text, gist, x/y, neighbours"]:::file
+    IJSON["ideas.json · 44 kB&lt;br/&gt;60 named clusters"]:::file
+    BIN["search.bin · 2.0 MB&lt;br/&gt;int8 vectors + scales"]:::file
   end
   UMAP --> DATA
   IDEAS --> IJSON
@@ -313,7 +313,7 @@ flowchart TB
   subgraph P["  Pipeline time · once, locally  "]
     direction LR
     C["all 5,097 passages&lt;br/&gt;same 0.65 / 0.35 gist blend"]:::file --> S1["bge-small-en-v1.5&lt;br/&gt;384-d, full precision"]:::step
-    S1 --> Q8["int8 quantise&lt;br/&gt;one scale per vector"]:::step --> BINF["search.bin · 1.6 MB&lt;br/&gt;ships with the site"]:::file
+    S1 --> Q8["int8 quantise&lt;br/&gt;one scale per vector"]:::step --> BINF["search.bin · 2.0 MB&lt;br/&gt;ships with the site"]:::file
   end
   subgraph B["  Visit time · in your browser  "]
     direction LR
