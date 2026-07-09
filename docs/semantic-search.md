@@ -1,7 +1,8 @@
 # Ask the Ages — a semantic search box over the corpus
 
-**Status: idea, not built. Zero marginal cost per query — the model runs in
-the visitor's browser; one-time pipeline cost ≈ a few cents.**
+**Status: built 2026-07-09 — search box on `site/index.html`, corpus matrix
+from `pipeline/embed_search.py` (`site/search.bin`, int8, 1.4 MB). Zero
+marginal cost per query — the model runs in the visitor's browser.**
 
 ## What it is
 

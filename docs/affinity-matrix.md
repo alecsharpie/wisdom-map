@@ -1,6 +1,7 @@
 # The Affinities — a tradition × tradition resonance matrix
 
-**Status: idea, not built. Zero LLM cost — derivable entirely from data we already have.**
+**Status: built 2026-07-09 — `site/affinities.html`, computed in the browser
+from `data.json` at load time. Zero LLM cost.**
 
 ## What it is
 

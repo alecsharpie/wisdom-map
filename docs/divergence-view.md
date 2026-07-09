@@ -1,7 +1,9 @@
 # The Distinctives — what each tradition says that no one else does
 
-**Status: idea, not built. Near-zero cost — the inverse of the ideas view,
-computed from data we already have.**
+**Status: built 2026-07-09 — `site/distinctives.html`, computed in the browser
+from `ideas.json` + `data.json`. No hard purity threshold in the end: small
+traditions (Taoism, Epicureanism) never reach 70% at k=60, so ideas are ranked
+by purity × lift and the purity is shown honestly per row. $0.**
 
 ## What it is
 

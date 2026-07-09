@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wisdom Map — The Affinities</title>
+<style>
+  :root {
+    --surface: #fcfcfb;
+    --page: #f9f9f7;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --panel: #ffffff;
+    --c0: #2a78d6; --c1: #008300; --c2: #eda100;
+    --c3: #4a3aa7; --c4: #1baf7a; --c5: #e34948; --c6: #0e93a8;
+    --c7: #a06a1e; --c8: #e87ba4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19;
+      --page: #0d0d0d;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --hairline: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+      --panel: #222221;
+      --c0: #3987e5; --c1: #008300; --c2: #c98500;
+      --c3: #9085e9; --c4: #199e70; --c5: #e66767; --c6: #1490a5;
+      --c7: #b07b2e; --c8: #d55181;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--ink);
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 20px 20px 60px; }
+  header { display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: baseline; margin-bottom: 6px; }
+  h1 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
+  header a { color: var(--ink-2); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--border); }
+  .sub { color: var(--ink-2); font-size: 13px; max-width: 62ch; margin-bottom: 14px; }
+  #headline { font-size: 14px; color: var(--ink-2); margin: 14px 0 18px; }
+  #headline b { color: var(--ink); font-weight: 600; }
+  #modes { display: flex; gap: 6px; margin-bottom: 14px; }
+  .mode {
+    padding: 5px 12px; border-radius: 999px; font-size: 13px; cursor: pointer;
+    background: var(--panel); border: 1px solid var(--border); color: var(--ink-2);
+  }
+  .mode.on { border-color: var(--ink-2); color: var(--ink); }
+  #wrap { overflow-x: auto; padding-bottom: 6px; }
+  #grid { display: grid; gap: 2px; width: max-content; }
+  .cell {
+    width: var(--cs); height: var(--cs); border-radius: 4px;
+    display: grid; place-items: center;
+    font-size: 11.5px; font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+  .cell.diag { background: color-mix(in srgb, var(--ink) 5%, transparent); cursor: default; }
+  .cell:not(.diag):hover { outline: 2px solid var(--ink-2); outline-offset: -1px; }
+  .cell.sel { outline: 2px solid var(--ink); outline-offset: -1px; }
+  .rowlab, .collab {
+    font-size: 12.5px; color: var(--ink-2); display: flex; align-items: center; gap: 6px;
+  }
+  .rowlab { justify-content: flex-end; padding-right: 10px; white-space: nowrap; }
+  .collab { height: 118px; align-items: flex-end; justify-content: center; }
+  .collab span {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+  .collab .dot { transform: rotate(180deg); }
+  #scale { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-size: 12px; color: var(--muted); }
+  #ramp { position: relative; width: 220px; height: 10px; border-radius: 5px; overflow: visible; }
+  #ramp .bar { position: absolute; inset: 0; border-radius: 5px; }
+  #ramp .tick {
+    position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink);
+    border-radius: 1px;
+  }
+  #ramp .ticklab { position: absolute; top: 12px; transform: translateX(-50%); white-space: nowrap; }
+  #foot { color: var(--muted); font-size: 11.5px; max-width: 62ch; margin-top: 26px; line-height: 1.55; }
+  #tip {
+    position: fixed; z-index: 5; max-width: 320px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.14);
+    padding: 10px 12px; font-size: 13px; line-height: 1.45;
+    pointer-events: none; display: none;
+  }
+  #tip b { font-weight: 650; }
+  #tip .meta { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  #panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 6;
+    width: min(420px, 100vw);
+    background: var(--panel); border-left: 1px solid var(--hairline);
+    transform: translateX(102%); transition: transform 0.22s ease;
+    display: flex; flex-direction: column;
+  }
+  #panel.open { transform: none; box-shadow: -12px 0 40px rgba(0,0,0,0.12); }
+  #panel .scroll { overflow-y: auto; padding: 18px 20px 28px; }
+  #panel .pair-title { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; margin: 2px 26px 4px 0; line-height: 1.3; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #panel .meta { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+  #panel h2 {
+    font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--muted); margin: 22px 0 6px; padding-top: 14px; border-top: 1px solid var(--hairline);
+  }
+  .pairbox { margin: 14px -10px 0; padding: 4px 0 8px; border-top: 1px solid var(--hairline); }
+  .pairbox .sim { color: var(--muted); font-size: 11.5px; padding: 8px 10px 0; font-variant-numeric: tabular-nums; }
+  .pass { padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+  .pass:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .pass .who { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; margin-bottom: 3px; }
+  .pass .t { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+  #close {
+    position: absolute; top: 10px; right: 10px;
+    width: 30px; height: 30px; border-radius: 8px; border: none;
+    background: transparent; color: var(--muted); font-size: 17px; cursor: pointer;
+  }
+  #close:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); }
+  @media (max-width: 720px) {
+    #panel { top: auto; height: 62vh; width: 100vw; border-left: none; border-top: 1px solid var(--hairline);
+             transform: translateY(103%); }
+    #panel.open { transform: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>The Affinities</h1>
+    <a href="./">← the map</a>
+    <a href="ideas.html">the ideas →</a>
+    <a href="distinctives.html">the distinctives →</a>
+    <a href="lineage.html">the lineage →</a>
+  </header>
+  <div class="sub">Which traditions echo each other most? Each cell counts how often
+    a passage's nearest neighbours cross between two traditions, against what chance
+    would predict given their sizes. <b>1.0 = chance</b>; higher means more entangled,
+    lower means the two mostly talk past each other.</div>
+  <div id="headline"></div>
+  <div id="modes">
+    <button class="mode on" data-m="lift">lift (vs. chance)</button>
+    <button class="mode" data-m="links">raw neighbour links</button>
+  </div>
+  <div id="wrap"><div id="grid"></div></div>
+  <div id="scale">
+    <span id="lo">0</span>
+    <div id="ramp"><div class="bar"></div></div>
+    <span id="hi"></span>
+    <span id="scalenote"></span>
+  </div>
+  <div id="foot">Neighbour lists are the same top-10 cosine neighbours the map draws
+    as threads. The matrix is symmetrised; hover shows each direction. A caveat:
+    Christianity here is sampled from the New Testament's teaching chapters, which may
+    lean its row toward Hebrew wisdom. An interpretive curiosity, not a theological claim.</div>
+</main>
+<div id="tip"></div>
+<aside id="panel">
+  <button id="close" title="Close">✕</button>
+  <div class="scroll" id="panelBody"></div>
+</aside>
+
+<script>
+(async function () {
+  const data = await fetch('data.json').then(r => r.json());
+  const P = data.passages, TRAD = data.traditions, T = TRAD.length, N = P.length, K = 10;
+  const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // ---------- compute observed / expected ----------
+  const nt = new Array(T).fill(0);
+  for (const p of P) nt[p.t]++;
+  const obs = Array.from({length: T}, () => new Array(T).fill(0));
+  for (const p of P) for (const [j] of p.nb) obs[p.t][P[j].t]++;
+  const lift = Array.from({length: T}, (_, a) => TRAD.map((_, b) => {
+    const exp = nt[a] * K * ((nt[b] - (a === b ? 1 : 0)) / (N - 1));
+    return obs[a][b] / exp;
+  }));
+  const sym = Array.from({length: T}, (_, a) => TRAD.map((_, b) => (lift[a][b] + lift[b][a]) / 2));
+  const links = Array.from({length: T}, (_, a) => TRAD.map((_, b) =>
+    a === b ? obs[a][a] : obs[a][b] + obs[b][a]));
+
+  // headline: extremes among off-diagonal cells
+  let best = null, worst = null;
+  for (let a = 0; a < T; a++) for (let b = a + 1; b < T; b++) {
+    if (!best || sym[a][b] > sym[best[0]][best[1]]) best = [a, b];
+    if (!worst || sym[a][b] < sym[worst[0]][worst[1]]) worst = [a, b];
+  }
+  document.getElementById('headline').innerHTML =
+    `Closest pair: <b>${TRAD[best[0]]} ↔ ${TRAD[best[1]]}</b> (${sym[best[0]][best[1]].toFixed(2)}× chance). ` +
+    `Most estranged: <b>${TRAD[worst[0]]} ↔ ${TRAD[worst[1]]}</b> (${sym[worst[0]][worst[1]].toFixed(2)}×).`;
+
+  // ---------- sequential ramp (palette blue 100→700; anchor flips in dark) ----------
+  const STEPS = ['#cde2fb','#b7d3f6','#9ec5f4','#86b6ef','#6da7ec','#5598e7','#3987e5',
+                 '#2a78d6','#256abf','#1c5cab','#184f95','#104281','#0d366b'];
+  const darkMode = matchMedia('(prefers-color-scheme: dark)');
+  const hex2rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  function rampColor(t) {                       // t in [0,1]
+    if (darkMode.matches) t = 1 - t;            // dark: near-zero recedes to the surface
+    const x = Math.max(0, Math.min(1, t)) * (STEPS.length - 1);
+    const i = Math.min(Math.floor(x), STEPS.length - 2), f = x - i;
+    const a = hex2rgb(STEPS[i]), b = hex2rgb(STEPS[i + 1]);
+    const c = a.map((v, k) => Math.round(v + (b[k] - v) * f));
+    return {css: `rgb(${c})`, lum: (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255};
+  }
+
+  // ---------- grid ----------
+  let mode = 'lift', selCell = null;
+  const grid = document.getElementById('grid');
+  const tip = document.getElementById('tip');
+  const M = () => mode === 'lift' ? sym : links;
+  const offMax = () => {
+    let m = 0;
+    for (let a = 0; a < T; a++) for (let b = 0; b < T; b++) if (a !== b) m = Math.max(m, M()[a][b]);
+    return m;
+  };
+
+  function render() {
+    const vmax = offMax();
+    const cs = Math.max(38, Math.min(56, Math.floor((Math.min(innerWidth, 940) - 190) / T)));
+    grid.style.setProperty('--cs', cs + 'px');
+    grid.style.gridTemplateColumns = `auto repeat(${T}, ${cs}px)`;
+    grid.innerHTML = '';
+    grid.appendChild(el('div', ''));                       // corner
+    TRAD.forEach((t, b) => {
+      const d = el('div', `<span><span class="dot" style="--c:var(--c${b})"></span>${t}</span>`);
+      d.className = 'collab';
+      grid.appendChild(d);
+    });
+    for (let a = 0; a < T; a++) {
+      const d = el('div', `<span class="dot" style="--c:var(--c${a})"></span>${TRAD[a]}`);
+      d.className = 'rowlab';
+      grid.appendChild(d);
+      for (let b = 0; b < T; b++) {
+        const c = document.createElement('div');
+        c.className = 'cell' + (a === b ? ' diag' : '');
+        if (a !== b) {
+          const v = M()[a][b];
+          const col = rampColor(v / vmax);
+          c.style.background = col.css;
+          c.style.color = col.lum > 0.62 ? '#0b0b0b' : '#ffffff';
+          c.textContent = mode === 'lift' ? v.toFixed(2) : v;
+          c.addEventListener('pointerenter', e => showTip(a, b, e));
+          c.addEventListener('pointermove', e => showTip(a, b, e));
+          c.addEventListener('pointerleave', () => tip.style.display = 'none');
+          c.addEventListener('click', () => select(a, b));
+          if (selCell && ((selCell[0] === a && selCell[1] === b) || (selCell[0] === b && selCell[1] === a)))
+            c.classList.add('sel');
+        }
+        grid.appendChild(c);
+      }
+    }
+    // scale
+    const stops = [];
+    for (let i = 0; i <= 10; i++) stops.push(rampColor(i / 10).css);
+    document.querySelector('#ramp .bar').style.background =
+      `linear-gradient(90deg, ${stops.join(',')})`;
+    document.getElementById('hi').textContent = mode === 'lift' ? vmax.toFixed(2) : vmax;
+    const ramp = document.getElementById('ramp');
+    ramp.querySelectorAll('.tick,.ticklab').forEach(n => n.remove());
+    if (mode === 'lift' && vmax > 1) {
+      const x = (1 / vmax) * 100;
+      const tick = document.createElement('div');
+      tick.className = 'tick'; tick.style.left = `calc(${x}% - 1px)`;
+      const lab = document.createElement('div');
+      lab.className = 'ticklab'; lab.style.left = x + '%'; lab.textContent = '1.0 = chance';
+      ramp.append(tick, lab);
+    }
+    document.getElementById('scalenote').textContent =
+      mode === 'lift' ? 'entanglement vs. chance' : 'neighbour links between the pair';
+  }
+  function el(tag, html) { const d = document.createElement(tag); d.innerHTML = html; return d; }
+
+  function showTip(a, b, e) {
+    tip.innerHTML = `<b>${TRAD[a]} ↔ ${TRAD[b]}</b>` +
+      `<div class="meta">lift ${sym[a][b].toFixed(2)} · ` +
+      `${TRAD[a]}→${TRAD[b]} ${lift[a][b].toFixed(2)}, ${TRAD[b]}→${TRAD[a]} ${lift[b][a].toFixed(2)}<br>` +
+      `${links[a][b]} neighbour link${links[a][b] === 1 ? '' : 's'} · click for the strongest pairs</div>`;
+    tip.style.display = 'block';
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - tw - 8) + 'px';
+    tip.style.top = Math.min(e.clientY + 14, innerHeight - th - 8) + 'px';
+  }
+
+  document.querySelectorAll('.mode').forEach(btn => btn.onclick = () => {
+    mode = btn.dataset.m;
+    document.querySelectorAll('.mode').forEach(b => b.classList.toggle('on', b === btn));
+    render();
+  });
+
+  // ---------- panel: strongest passage pairs behind a cell ----------
+  const panel = document.getElementById('panel');
+  const panelBody = document.getElementById('panelBody');
+  function select(a, b) {
+    if (a > b) [a, b] = [b, a];
+    selCell = [a, b];
+    tip.style.display = 'none';
+    history.replaceState(null, '', `#c${a}-${b}`);
+    const seen = new Set(), pairs = [];
+    for (let i = 0; i < N; i++) {
+      const p = P[i];
+      if (p.t !== a && p.t !== b) continue;
+      const want = p.t === a ? b : a;
+      for (const [j, s] of p.nb) {
+        if (P[j].t !== want) continue;
+        const key = Math.min(i, j) + '-' + Math.max(i, j);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        pairs.push([s, p.t === a ? i : j, p.t === a ? j : i]);
+      }
+    }
+    pairs.sort((x, y) => y[0] - x[0]);
+    let html = `<div class="pair-title"><span class="dot" style="--c:var(--c${a})"></span>${TRAD[a]}` +
+      ` ↔ <span class="dot" style="--c:var(--c${b})"></span>${TRAD[b]}</div>` +
+      `<div class="meta">lift ${sym[a][b].toFixed(2)} (1.0 = chance) · ${pairs.length} neighbour pairs</div>` +
+      `<h2>Strongest echoes</h2>`;
+    html += pairs.slice(0, 10).map(([s, i, j]) =>
+      `<div class="pairbox"><div class="sim">similarity ${s.toFixed(2)}</div>` +
+      passRow(i) + passRow(j) + `</div>`).join('');
+    panelBody.innerHTML = html;
+    panelBody.querySelectorAll('.pass').forEach(elm => {
+      elm.onclick = () => { location.href = './#p' + elm.dataset.p; };
+    });
+    panel.classList.add('open');
+    panelBody.parentElement.scrollTop = 0; panelBody.scrollTop = 0;
+    render();
+  }
+  function passRow(i) {
+    const p = P[i];
+    return `<div class="pass" data-p="${i}">` +
+      `<div class="who"><span class="dot" style="--c:var(--c${p.t})"></span>` +
+      `${TRAD[p.t]} · ${esc(data.sources[p.s])} ${esc(p.ref)}</div>` +
+      `<div class="t">${esc(p.text.length > 170 ? p.text.slice(0, 170) + '…' : p.text)}</div></div>`;
+  }
+  document.getElementById('close').onclick = () => {
+    selCell = null; panel.classList.remove('open');
+    history.replaceState(null, '', location.pathname);
+    render();
+  };
+  addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('close').click(); });
+
+  darkMode.addEventListener('change', render);
+  addEventListener('resize', render);
+  render();
+  const m = location.hash.match(/^#c(\d+)-(\d+)$/);
+  if (m && +m[1] < T && +m[2] < T && +m[1] !== +m[2]) select(+m[1], +m[2]);
+})();
+</script>
+</body>
+</html>

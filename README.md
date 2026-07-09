@@ -36,9 +36,27 @@ on top of each other.
 is public domain but every complete English translation is modern and
 copyrighted. The Sermon on the Mount and the Enchiridion stand in.)
 
-## Three views
+## Five views
 
-- **The map** (`site/index.html`) — the embedding scatter described above.
+- **The map** (`site/index.html`) — the embedding scatter described above. It
+  also carries **Ask the Ages**: a search box that embeds your question
+  *in the browser* (transformers.js + bge-small, ~34 MB model downloaded from
+  Hugging Face on first use, then cached) and lights up the closest passages —
+  no server, $0 per query. The corpus side is `site/search.bin`, an
+  int8-quantised 384-d re-embedding of all passages
+  (`pipeline/embed_search.py`) so queries and passages share a shippable space;
+  the map itself stays on bge-large.
+- **The affinities** (`site/affinities.html`) — a 9×9 heatmap of which
+  traditions echo each other most, computed in the browser from the map's
+  neighbour lists as observed-vs-expected lift (1.0 = chance, so a large
+  tradition can't win by volume). Click a cell for the strongest actual
+  passage pairs behind it. Closest pair: Christianity ↔ Islam; most
+  estranged: Islam ↔ Taoism.
+- **The distinctives** (`site/distinctives.html`) — the inverse of the ideas
+  view: what each tradition says that the others here don't. The 60 idea
+  clusters ranked per tradition by purity × lift, plus each tradition's
+  *island* share (passages whose ten nearest neighbours are all
+  home-tradition).
 - **The ideas** (`site/ideas.html`) — the higher-level view: the same embeddings
   k-means-clustered into 60 named ideas. Each idea is a bubble sized by passage
   count whose ring shows which traditions arrive at it; a "most shared ideas"
@@ -60,9 +78,15 @@ The site is fully static; `site/data.json` is precomputed.
 
 ```sh
 cd site && python3 -m http.server 8643
-# map:     http://localhost:8643/
-# lineage: http://localhost:8643/lineage.html
+# map + search:  http://localhost:8643/
+# ideas:         http://localhost:8643/ideas.html
+# affinities:    http://localhost:8643/affinities.html
+# distinctives:  http://localhost:8643/distinctives.html
+# lineage:       http://localhost:8643/lineage.html
 ```
+
+(The search box is the one feature that isn't fully offline — it fetches the
+embedding model from Hugging Face's CDN on first use, behind a consent prompt.)
 
 Deep-link a passage with `#p<id>` (e.g. `/#p102`), or a lineage node by id
 (e.g. `lineage.html#quran`).
@@ -75,6 +99,7 @@ python3 pipeline/chunk.py            # parse + chunk      -> data/passages.json
 python3 pipeline/distill.py          # LLM gists          -> data/gists.json
 uv run pipeline/embed_project.py     # embed + UMAP       -> site/data.json
 uv run pipeline/ideas.py             # cluster + label    -> site/ideas.json
+uv run pipeline/embed_search.py      # bge-small re-embed -> site/search.bin
 ```
 
 The distill step calls `claude -p` (Haiku) in 60-passage batches; it tracks and
@@ -90,14 +115,9 @@ neighbours.
 
 ## Ideas not built yet
 
-Each has a short project description in `docs/`:
-
-- [Ask the Ages](docs/semantic-search.md) — type a modern sentence, see which
-  traditions were already there (in-browser embedding model, no server).
-- [The Affinities](docs/affinity-matrix.md) — a 9×9 heatmap of which
-  traditions echo each other most (free — derived from existing neighbours).
-- [The Distinctives](docs/divergence-view.md) — the inverse of the ideas view:
-  what each tradition says that no one else does.
 - More traditions: Rumi, Zhuangzi, Pirkei Avot, Seneca's letters…
+
+(The original project descriptions for the search, affinities, and
+distinctives views live in `docs/` — all three were built 2026-07-09.)
 
 *Interpretive, not authoritative — a curiosity, not a theological claim.*
