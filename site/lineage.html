@@ -12,7 +12,7 @@
     --ink-2: #52514e;
     --muted: #898781;
     --hairline: #e1e0d9;
-    --border: rgba(11,11,11,0.10);
+    --border: rgba(11,11,11,0.12);
     --panel: #ffffff;
     --grid: rgba(11,11,11,0.06);
     --edge: rgba(11,11,11,0.28);
@@ -34,7 +34,7 @@
       --ink-2: #c3c2b7;
       --muted: #898781;
       --hairline: #2c2c2a;
-      --border: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.14);
       --panel: #222221;
       --grid: rgba(255,255,255,0.06);
       --edge: rgba(255,255,255,0.30);
@@ -63,8 +63,8 @@
   header > * { pointer-events: auto; }
   h1 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
   .sub { color: var(--ink-2); font-size: 13px; max-width: 60ch; }
-  header a { color: var(--ink-2); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--border); }
-  header a:hover { color: var(--ink); }
+  a.nav { color: var(--ink-2); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--border); }
+  a.nav:hover { color: var(--ink); }
   #legend {
     position: fixed; left: 20px; bottom: 16px; z-index: 4;
     display: flex; flex-wrap: wrap; gap: 6px; max-width: min(92vw, 720px);
@@ -73,10 +73,10 @@
     display: inline-flex; align-items: center; gap: 7px;
     padding: 5px 12px 5px 9px; border-radius: 999px;
     background: var(--panel); border: 1px solid var(--border);
-    color: var(--ink-2); font-size: 13px; cursor: pointer; user-select: none;
+    color: var(--ink-2); font-size: 12.5px; cursor: pointer; user-select: none;
   }
   .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c, var(--muted)); }
-  .chip.off { opacity: 0.45; }
+  .chip.off { opacity: 0.4; }
   .chip.off .dot { background: var(--muted); }
   .chip b { color: var(--ink); font-weight: 600; }
   #stage { position: fixed; inset: 0; cursor: grab; touch-action: none; }
@@ -198,7 +198,7 @@
   <button id="zfit" title="Reset view">⌂</button>
 </div>
 <div id="foot">Dates are scholarly ranges and often contested.
-  An interpretive curiosity, not a theological claim.</div>
+  An interpretive map, not a theological claim.</div>
 
 <aside id="panel">
   <button id="close" title="Close">✕</button>
