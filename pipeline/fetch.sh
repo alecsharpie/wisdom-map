@@ -10,7 +10,9 @@ cd "$(dirname "$0")/../data/raw"
 # 3283  Upanishads (Paramananda)      57342 Diogenes Laertius (Yonge; Epicurus)
 # 59709 Zhuangzi (Giles)              10056 Sayings of Mencius (Giles anthology)
 # 8547  Pirkei Avot (Taylor)          45159 Rumi, The Persian Mystics (Davis)
-for id in 216 2017 2680 10 2388 3330 45109 3434 3283 57342 59709 10056 8547 45159; do
+# 30508 Ptahhotep + Ke'gemni (Egypt)  64623 Diamond Sutra (Buddhism, Mahayana)
+# 19312 Tablets of Abdul-Baha (Baha'i)
+for id in 216 2017 2680 10 2388 3330 45109 3434 3283 57342 59709 10056 8547 45159 30508 64623 19312; do
   [ -f "pg${id}.txt" ] || curl -sL -o "pg${id}.txt" "https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt" &
 done
 wait
@@ -19,7 +21,14 @@ wait
 # downstream by pipeline/ocr_extract.py (LLM). The djvu.txt filename is NOT
 # "<id>_djvu.txt" — it's prefixed by the item's own title, so resolve it from the
 # metadata API first. Format: local_name=archive_id
-for spec in "zoro_sbe31.txt=in.ernet.dli.2015.110222"; do   # SBE 31 = the Gathas (Mills 1887)
+for spec in \
+    "zoro_sbe31.txt=in.ernet.dli.2015.110222" \
+    "sikh_macauliffe1.txt=in.ernet.dli.2015.85504" \
+    "jain_sbe45.txt=1922707.0045.002.umich.edu" \
+    "meso_babassyr.txt=babylonianandnas0000epip" \
+    ; do
+  # SBE 31 = Gathas (Mills); Macauliffe Sikh Religion Vol I; SBE 45 pt2 =
+  # Uttaradhyayana (Jaina); Babylonian & Assyrian Literature (Wilson 1901)
   out="${spec%%=*}"; id="${spec##*=}"
   [ -f "$out" ] && continue
   fn=$(curl -sL "https://archive.org/metadata/${id}/files" \

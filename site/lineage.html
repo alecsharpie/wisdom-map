@@ -25,6 +25,7 @@
     --f-semitic: #2f74d0;
     --f-hellenic:#6d54c8;
     --f-italic:  #d0562f;
+    --f-egyptian:#9a8722;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -46,6 +47,7 @@
       --f-semitic: #4f90e6;
       --f-hellenic:#9483e6;
       --f-italic:  #e87a56;
+      --f-egyptian:#c4ac3f;
     }
   }
   * { box-sizing: border-box; margin: 0; }
@@ -217,6 +219,7 @@
     semitic:  { name: "Semitic",               v: "--f-semitic" },
     hellenic: { name: "Hellenic (Greek)",      v: "--f-hellenic" },
     italic:   { name: "Italic (Latin)",        v: "--f-italic" },
+    egyptian: { name: "Egyptian",              v: "--f-egyptian" },
   };
 
   // ---------- the data (nodes) ----------
@@ -268,10 +271,16 @@
     { id:"manichaean", label:"Manichaean texts", fam:"iranian", lang:"Syriac, Mid. Persian…", place:"Sasanian Persia", year:250, date:"3rd c. CE", row:9, p:[["avesta","d"],["newtestament","i"]],
       blurb:"The scriptures of Mani's once‑vast syncretic faith, fusing Zoroastrian, Christian and Buddhist strands. Now extinct." },
 
+    // — Ancient Near East (the oldest wisdom, feeding the Hebrew Bible) —
+    { id:"egypt", label:"Egyptian Instructions", fam:"egyptian", root:true, lang:"Middle Egyptian", place:"Egypt (the Nile)", year:-2400, date:"Ptah‑hotep c. 2400 BCE", row:11, p:[],
+      blurb:"The sebayt or 'Instruction' — a vizier's worldly wisdom to his son. Ptah‑hotep is among the oldest books on earth." },
+    { id:"mesopotamia", label:"Babylonian Wisdom", fam:"semitic", root:true, lang:"Sumerian, Akkadian", place:"Mesopotamia", year:-2000, date:"c. 2000–600 BCE", row:10, p:[["protosemitic","d"]],
+      blurb:"Hymns, prayers and penitential psalms of Sumer and Babylon — among the oldest religious poetry, echoed later in the Hebrew Bible." },
+
     // — Abrahamic —
     { id:"protosemitic", label:"Proto-Semitic", fam:"roots", root:true, lang:"reconstructed", place:"Near East / Arabia", year:-3750, date:"c. 3750 BCE", row:10, p:[],
       blurb:"The reconstructed parent of Hebrew, Aramaic, Arabic and Ge'ez — the language spine of the whole Abrahamic branch." },
-    { id:"hebrewbible", label:"Hebrew Bible", fam:"semitic", lang:"Hebrew (+ Aramaic)", place:"Levant", year:-550, date:"c. 1200–165 BCE", row:10, p:[["protosemitic","d"],["avesta","i"]],
+    { id:"hebrewbible", label:"Hebrew Bible", fam:"semitic", lang:"Hebrew (+ Aramaic)", place:"Levant", year:-550, date:"c. 1200–165 BCE", row:10, p:[["protosemitic","d"],["avesta","i"],["egypt","i"],["mesopotamia","i"]],
       blurb:"The Tanakh — Torah, Prophets and Writings. Reached its final Torah form under Persian rule, c. 450–350 BCE." },
     { id:"talmud", label:"Talmud", fam:"semitic", lang:"Hebrew & Aramaic", place:"Galilee / Babylon", year:500, date:"Mishnah 200 CE · Gemara 500 CE", row:10, p:[["hebrewbible","d"]],
       blurb:"Rabbinic Judaism's vast record of law and debate, built as a commentary layered on the Hebrew Bible." },
@@ -314,6 +323,8 @@
     manichaean: ["Strict dualism of Light and Darkness", "The soul as light trapped in matter", "Salvation as the release of that light", "Mani as the final prophet"],
     protosemitic: ["A reconstructed parent tongue, not a text — the root of the Abrahamic scriptural languages"],
     hebrewbible:["One covenant God", "Law (Torah) and prophecy", "Creation, exodus and exile", "Justice, mercy and wisdom"],
+    egypt:["Live by maat — truth and right order", "Restraint and good speech", "Listen before you answer", "Justice to the poor and the servant"],
+    mesopotamia:["The gods' favour and human frailty", "Penitence for sin, even sin unknown", "Fate and the shortness of life", "Praise and lament to the divine"],
     talmud:     ["The 'oral Torah' written down", "Law (halakha) and lore (aggada)", "Debate and dissent as a form of devotion"],
     septuagint: ["The Hebrew scriptures rendered into Greek", "A bridge to the Hellenistic world", "The 'Old Testament' of the early Church"],
     newtestament:["Jesus as Messiah and Son of God", "Crucifixion and resurrection", "Grace and the Kingdom of God", "A mission to all peoples"],
@@ -345,6 +356,9 @@
     "newtestament>manichaean": "Mani also cast himself as an apostle of Jesus, folding Christian figures and scripture into his system.",
     "protosemitic>hebrewbible": "Language descent: the scriptures were composed in Hebrew, a Semitic tongue.",
     "avesta>hebrewbible": "Persian-era contact: cosmic good-versus-evil, angels and demons, resurrection and a final judgment enter Second Temple Jewish thought.",
+    "protosemitic>mesopotamia": "Language descent: Akkadian, the tongue of Babylon and Assyria, is the oldest attested Semitic language.",
+    "egypt>hebrewbible": "Egypt's 'Instruction' wisdom feeds the Hebrew wisdom books — a stretch of Proverbs closely parallels the Egyptian Instruction of Amenemope.",
+    "mesopotamia>hebrewbible": "A shared Mesopotamian inheritance: the flood and creation stories, and the penitential psalm, resurface reworked in the Hebrew Bible.",
     "hebrewbible>septuagint": "A translation — the Hebrew scriptures rendered into Greek for the Jews of the diaspora.",
     "hebrewbible>talmud": "The Talmud is built as commentary and law layered directly onto the Torah.",
     "hebrewbible>newtestament": "The first Christians were Jews who read Jesus as the fulfilment of the Hebrew prophets and covenant.",
@@ -381,6 +395,8 @@
     avesta: "The scripture of Zoroastrianism, layered like the Vedas: its oldest and most sacred core, the Gāthās, are hymns in Old Avestan ascribed to the prophet Zarathustra himself. It envisions one supreme god, Ahura Mazda, a cosmos torn between truth and the Lie, and a coming renewal of the world.",
     manichaean: "The teachings of the 3rd-century-CE prophet Mani, who set out to found a universal religion fusing Zoroastrian, Christian and Buddhist elements. Its scriptures describe a stark cosmic war between Light and Darkness and the soul's rescue from matter. Once spread from Rome to China, it is now extinct.",
     protosemitic: "A reconstruction rather than a text: the common ancestor of the Semitic languages — Akkadian, Hebrew, Aramaic, Arabic, Ge'ez — spoken perhaps in the 4th millennium BCE. It is the linguistic root from which the scriptural languages of the whole Abrahamic family descend.",
+    egypt: "The Instruction (sebayt) of Ptah‑hotep, a vizier under the Old Kingdom king Isesi (c. 2400 BCE), is among the oldest books in the world: forty‑odd maxims a father passes to his son on living well — with restraint, good speech, humility and justice toward the weak. The genre ran for two millennia and left its mark on the wisdom books of the Bible.",
+    mesopotamia: "Not one book but the religious poetry of Sumer, Babylon and Assyria, recovered from cuneiform tablets: hymns, prayers, and above all the penitential psalms in which a sufferer pleads forgiveness for sins he cannot even name. Composed across two millennia, it is the oldest religious literature on earth, and its flood story, laments and psalms echo forward into the Hebrew Bible.",
     hebrewbible: "The Tanakh — Torah (law), Nevi'im (prophets) and Ketuvim (writings) — composed across centuries in Hebrew with some Aramaic. Modern scholarship sees the Torah reaching its final form under Persian rule (c. 450–350 BCE). It tells of one God in covenant with Israel, from creation and exodus to exile and return.",
     talmud: "The central text of Rabbinic Judaism: the Mishnah (a code of oral law, c. 200 CE) plus the Gemara (centuries of Aramaic commentary and debate, completed c. 500 CE). Sprawling and argumentative, it records not settled doctrine but the reasoning — law (halakha) braided with story and lore (aggada).",
     septuagint: "The translation of the Hebrew scriptures into Koine Greek, begun in Alexandria in the 3rd century BCE for Greek-speaking Jews. It became the Bible most early Christians actually read and quoted, and preserves a slightly different canon and text from the later Hebrew standard.",
@@ -415,6 +431,8 @@
     manichaean: "https://en.wikipedia.org/wiki/Manichaeism",
     protosemitic: "https://en.wikipedia.org/wiki/Proto-Semitic_language",
     hebrewbible: "https://en.wikipedia.org/wiki/Hebrew_Bible",
+    egypt: "https://en.wikipedia.org/wiki/The_Maxims_of_Ptahhotep",
+    mesopotamia: "https://en.wikipedia.org/wiki/Akkadian_literature",
     talmud: "https://en.wikipedia.org/wiki/Talmud",
     septuagint: "https://en.wikipedia.org/wiki/Septuagint",
     newtestament: "https://en.wikipedia.org/wiki/New_Testament",
@@ -449,6 +467,7 @@
     // Abrahamic — Jewish spine (top), then the Islamic line, then the self-contained
     // Christian chain, with the Latin Vulgate dropped onto its own row so its two
     // converging descent edges read cleanly.
+    mesopotamia:10, egypt:11,
     protosemitic:10, hebrewbible:10, talmud:10,
     quran:11, hadith:11,
     septuagint:12, newtestament:12, bahai:12,

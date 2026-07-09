@@ -26,6 +26,8 @@ def load(pgid: int) -> str:
 def clean(s: str) -> str:
     s = re.sub(r"\[.*?\]", "", s, flags=re.S)  # editorial notes / footnote refs
     s = re.sub(r"\(\d+\)", "", s)
+    s = re.sub(r"\{\d+\}", "", s)              # {NN} inline page numbers (OCR/Gunn)
+    s = s.replace("(?)", "")                   # translator's uncertainty marker
     s = s.replace("_", "").replace("=", "")    # Gutenberg italics / bold markers
     s = re.sub(r"&c\.?", "etc.", s)
     s = re.sub(r"\s*(--|——)\s*", " — ", s)
@@ -415,6 +417,61 @@ def rumi(records):
         emit(records, "Islam", "Rumi", title, text)
 
 
+# --- Ancient Egypt: the Instruction of Ptah-hotep + Ke'gemni (Gunn, "The Oldest
+# Books in the World"). Numbered maxims "N.  text" at col 0. The Instruction of
+# Amenemhe'et that follows Ke'gemni is a royal political testament, not wisdom —
+# skipped (its numbering would also collide). ---
+def ptahhotep(records):
+    body = load(30508)
+    m = re.search(r"^He said unto his son:", body, re.M)
+    k = re.search(r"^THE INSTRUCTION OF KE'GEMNI", body[m.end():], re.M)
+    pt = body[m.end() : m.end() + k.start()]
+    maxim = r"^(\d+)\.(?:\[\d+\])?\s+(.*?)(?=^\d+\.(?:\[\d+\])?\s|\Z)"
+    for mm in re.finditer(maxim, pt, re.M | re.S):
+        emit(records, "Ancient Egypt", "Ptah-hotep", f"maxim {mm.group(1)}", mm.group(2))
+    kb = body[m.end() + k.start():]
+    fin = re.search(r"IT IS FINISHED", kb)
+    kb = kb[: fin.start()] if fin else kb
+    for mm in re.finditer(maxim, kb, re.M | re.S):
+        emit(records, "Ancient Egypt", "Ke'gemni", f"maxim {mm.group(1)}", mm.group(2))
+
+
+# --- Buddhism (Mahāyāna): the Diamond Sutra (Gemmell/Prajna-Paramita). The
+# transcriber marks sections "[Chapter N]" and moves footnotes to each chapter's
+# end (first indented "[N]" line onward). ---
+def diamond_sutra(records):
+    body = load(64623)
+    m = re.search(r"^\[Chapter 1\]", body, re.M)
+    body = body[m.start():]
+    for cm in re.finditer(r"^\[Chapter (\d+)\][ \t]*$(.*?)(?=^\[Chapter \d+\]|\Z)",
+                          body, re.M | re.S):
+        num, text = cm.group(1), cm.group(2)
+        cut = re.search(r"\n[ \t]+\[\d+\]", text)
+        emit(records, "Buddhism", "Diamond Sutra", f"ch. {num}",
+             text[: cut.start()] if cut else text)
+
+
+# --- Bahá'í: Tablets of Abdul-Baha Abbas (Bahai Publishing Society, 1909–19; PD).
+# Volume I only, to keep the corpus balanced (all 3 vols = 840 tablets). Each tablet
+# is a letter opening with a col-0 salutation ("O ye…", "O thou…", "He is God…");
+# split there. Capped at ~175 passages. ---
+def bahai(records):
+    body = load(19312)
+    m = re.search(r"^TABLETS OF ABDUL-BAHA\s*$", body, re.M)
+    v2 = re.search(r"^VOLUME II", body[m.end():], re.M)
+    vol1 = body[m.end() : m.end() + v2.start()]
+    tablets = re.split(r"(?m)^(?=(?:O (?:ye|thou|my God|God|Lord|thou who)|He is God))",
+                       vol1)
+    n = 0
+    for t in tablets:
+        if len(t.strip()) < 120:
+            continue
+        n += 1
+        emit(records, "Bahá'í", "Tablets of Abdul-Baha", f"Vol. I §{n}", t)
+        if sum(1 for r in records if r["tradition"] == "Bahá'í") >= 175:
+            break
+
+
 # --- Zoroastrianism: the Gathas (SBE 31, Mills). Not parsed from raw OCR here —
 # the scan is too noisy for regex, so pipeline/ocr_extract.py distils it into clean
 # numbered verses first (data/raw/zoroastrianism.clean.json); we just emit those. ---
@@ -428,11 +485,37 @@ def zoroastrianism(records):
              v["text"])
 
 
+# --- Jainism / Sikhism / Mesopotamia: like Zoroastrianism these are archive.org OCR
+# distilled to clean passages by pipeline/ocr_extract.py ([{ref, text}]); emit those. ---
+def _ocr_passages(records, tradition, source, filename, ref_prefix=""):
+    path = RAW / filename
+    if not path.exists():
+        print(f"  (skip {tradition}: run pipeline/ocr_extract.py first)")
+        return
+    for i, v in enumerate(json.loads(path.read_text(encoding="utf-8")), 1):
+        ref = f"{ref_prefix}{v['ref']}" if v.get("ref") else f"{ref_prefix}§{i}"
+        emit(records, tradition, source, ref, v["text"])
+
+
+def jainism(records):
+    _ocr_passages(records, "Jainism", "Uttaradhyayana", "jainism.clean.json", "v. ")
+
+
+def sikhism(records):
+    _ocr_passages(records, "Sikhism", "Adi Granth (Macauliffe)", "sikhism.clean.json")
+
+
+def mesopotamia(records):
+    _ocr_passages(records, "Mesopotamia", "Babylonian hymns & psalms",
+                  "mesopotamia.clean.json")
+
+
 def main():
     records = []
     for fn in (tao, dhammapada, meditations, enchiridion, kjv, gita, analects,
                quran, upanishads, epicurus, zhuangzi, mencius, pirkei_avot, rumi,
-               zoroastrianism):
+               zoroastrianism, ptahhotep, diamond_sutra, bahai,
+               jainism, sikhism, mesopotamia):
         before = len(records)
         fn(records)
         src = records[-1]["source"] if len(records) > before else fn.__name__

@@ -47,52 +47,58 @@ adding Sikhism (Macauliffe) is now: write a `slice_*` fn + prompt, reuse the res
 
 ---
 
-## ✅ In the corpus (10 traditions, 4,380 passages)
+## ✅ In the corpus (15 traditions, 5,097 passages)
 
-| Tradition | Sources (Gutenberg #) |
+| Tradition | Sources |
 |---|---|
-| Taoism | Tao Te Ching #216, **Zhuangzi** #59709 (Inner Ch. I–VII) |
-| Buddhism | Dhammapada #2017 |
+| Taoism | Tao Te Ching #216, Zhuangzi #59709 |
+| Buddhism | Dhammapada #2017, **Diamond Sutra #64623** (Mahāyāna) |
 | Stoicism | Meditations #2680, Enchiridion #45109 |
-| Hebrew wisdom | Proverbs/Ecclesiastes (KJV #10), **Pirkei Avot** #8547 |
+| Hebrew wisdom | Proverbs/Ecclesiastes (KJV #10), Pirkei Avot #8547 |
 | Christianity | NT teaching chapters (KJV #10) |
 | Hinduism | Bhagavad Gita #2388, Upanishads #3283 |
-| Confucianism | Analects #3330, **Mencius** #10056 |
-| Islam | Qur'an (Rodwell #3434), **Rumi / Masnavi** #45159 |
+| Confucianism | Analects #3330, Mencius #10056 |
+| Islam | Qur'an (Rodwell #3434), Rumi / Masnavi #45159 |
 | Epicureanism | Letter to Menoeceus + Principal Doctrines (#57342) |
-| **Zoroastrianism** | **Gāthās** (SBE 31, Mills — archive.org `in.ernet.dli.2015.110222`, 239 v.) |
+| Zoroastrianism | Gāthās (SBE 31, Mills — archive.org OCR, 239 v.) |
+| **Ancient Egypt** | **Ptah-hotep + Ke'gemni #30508** (Gunn; the oldest wisdom, 57 v.) |
+| **Bahá'í** | **Tablets of Abdul-Baha #19312** (Vol I; PD 1909–19, capped 175) |
+| **Jainism** | **Uttarādhyayana** (SBE 45 pt.2, Jacobi — archive.org OCR, Lect. I–X) |
+| **Sikhism** | **Ādi Granth** via Macauliffe Vol I (archive.org OCR — Japji + Nanak hymns) |
+| **Mesopotamia** | **Babylonian & Assyrian Literature** (Wilson 1901 — archive.org OCR; hymns, penitential psalms, Sabitu songs) |
 
-Bold = added 2026-07-09. Zoroastrianism is the **10th tradition** and the first
-**archive.org / OCR** source (all others are Gutenberg) → it needed a validated
-10th palette slot: `--c9` = `#b02d8f` light / `#d45cae` dark (**magenta**), which
-passes dataviz `validate_palette.js` in both modes. Zoroastrianism sorts last
-alphabetically so it takes index 9; no existing tradition's colour shifted. In the
-map it forms its own tight cluster; affinities put it closest to Islam/Hebrew/
-Christian (the Abrahamic side — matching the Avesta→Hebrew-Bible influence edge in
-`lineage.html`, where the `avesta` node already existed).
+Bold = added 2026-07-10. **Six additions in one pass** (5 new traditions + a Mahāyāna
+voice for Buddhism), on Alec's "breadth > depth — it's what makes *most shared ideas*
+meaningful" steer. Result: the top shared idea now spans **10.5 effective traditions**
+(was ~7.9). **Copyright note:** Bahá'í's authoritative *Hidden Words* (Shoghi Effendi
+1929) is still under copyright — the Gutenberg *Tablets of Abdul-Baha* (1909–19) is the
+PD substitute (like the Gospel-of-Thomas problem, solved by an older PD edition).
+
+**Palette:** now **15 categorical colours** (`--c0..--c14`, validated both modes). New
+tradition names re-sort alphabetically, so colours reassign positionally — the whole
+15-set was re-picked, not appended. **This is at/over the categorical ceiling** (the
+dataviz skill caps clean categorical at ~10–12); the residual CVD floor-band pairs are
+covered by the always-on legend + hover + click (secondary encoding). **A 16th tradition
+should NOT get a 16th hue** — instead deepen existing traditions (no palette cost), or
+switch encoding (colour-by-lineage-family + shape, like `lineage.html`).
+
+**Lineage:** `guru`/`jain`/`bahai` nodes already existed (adding them to the map closed
+those orphans). Added two NEW nodes — `egypt` (new `egyptian` family) and `mesopotamia`
+(`semitic`, ← proto-Semitic) — both feeding `hebrewbible` by influence. Affinities then
+"found" it: **Ancient Egypt ↔ Hebrew wisdom 2.28×** (the Amenemope→Proverbs link),
+Buddhism ↔ Jainism 1.50 (śramaṇa), Bahá'í ↔ Mesopotamia 2.71 (devotional/prayer).
 
 ---
 
-## ⏳ Deferred — wanted, but not cleanly sourceable yet
+## ⏳ Deferred / notes
 
-~~Zoroastrianism~~ ✅ **done 2026-07-09** (see above — first OCR source, proved the
-`ocr_extract.py` pipeline). **Sikhism is now the obvious next**: the OCR pipeline
-exists, so it's no longer blocked on tooling — only on writing a `slice_*`/prompt for
-Macauliffe. It's **already a node in `lineage.html`** (`guru`, the Ādi Granth) but
-absent from the map, so it closes the same kind of inconsistency Zoroastrianism did.
-It would be the **11th tradition** → needs a validated 11th palette slot `--c10`
-(run dataviz `validate_palette.js`; the wheel is crowded at 10 — budget time for this).
-
-### Sikhism — Ādi Granth / Japji Sahib
-- **Gutenberg:** ❌ not found — searched `sikh`, `sikhism`, `granth`, `adi granth`,
-  `macauliffe` (nothing).
-- **sacred-texts:** `/skh/` exists but 403s.
-- **archive.org leads (untried):** Macauliffe, **The Sikh Religion** (1909, PD) —
-  `TheSikhReligionVolVI`, `in.ernet.dli.2015.45273` (Vol 5),
-  `in.ernet.dli.2015.214766` (Vol III), `in.gov.ignca.13815` (Vol 4). Vol I holds
-  the Japji. **Care:** Macauliffe interleaves translation with heavy biographical
-  commentary — the `slice_*` fn must find the hymn blocks, and the Opus prompt must
-  reject the surrounding prose (the Gāthās had cleaner per-section headers).
+All of the previously-deferred traditions are now **in the corpus**. Remaining ideas
+live in the candidate lists below. Sourcing recipes proven this round:
+- **Gutenberg** for clean text (Ptahhotep #30508, Diamond Sutra #64623, Bahá'í #19312).
+- **archive.org OCR** via `ocr_extract.py` for Sikhism (`in.ernet.dli.2015.85504`),
+  Jainism (`1922707.0045.002.umich.edu`), Mesopotamia (`babylonianandnas0000epip`).
+  Each is a `slice_*` fn + Opus prompt + a balance cap; the "passages" shape (vs the
+  Gathas' verse-count-checked shape) handles messier texts.
 
 ---
 
@@ -101,25 +107,31 @@ It would be the **11th tradition** → needs a validated 11th palette slot `--c1
 All plausibly on Gutenberg (Legge/PD); would keep the corpus balanced without new
 palette work since they map to existing traditions.
 
+**Deepening existing traditions is now the preferred way to grow** (breadth is well
+covered at 15, and no new palette slot is needed). All plausibly on Gutenberg (Legge/PD).
+
 | Tradition | Candidate text | Note |
 |---|---|---|
 | Confucianism | Doctrine of the Mean, Great Learning | Legge; short, canonical |
-| Buddhism | Sutta Nipata; Heart / Diamond Sutra (Mahāyāna) | broadens beyond the Dhammapada |
+| ~~Buddhism~~ | ~~Diamond Sutra (Mahāyāna)~~ | ✅ done 2026-07-10 (#64623); could still add Heart Sūtra / Sutta Nipāta |
 | Islam | more of Rumi (Redhouse *Mesnevi* Bk I #61724; Divan #57068) | #45159 was the Davis selection |
-| Hinduism | more Upanishads; Yoga Sutras | Gita + 3 Upanishads today |
+| Hinduism | more Upanishads; Yoga Sutras (#2526) | Gita + 3 Upanishads today |
 | Stoicism | Seneca's *Letters* / *On the Shortness of Life* | adds a third Stoic voice |
+| Jainism | more Uttarādhyayana (Lect. XI–XXXVI) + Sūtrakṛtāṅga | only Lect. I–X taken |
+| Sikhism | more of Macauliffe (later Gurus' hymns) | only Vol I / Nanak taken |
 
-## 💡 Whole new traditions (would each need a palette slot + lineage already has some)
+## 💡 Whole new traditions (each would need a 16th palette slot — AVOID, see palette note above)
 
 | Tradition | Text | Sourcing note |
 |---|---|---|
-| ~~Zoroastrianism~~ | ~~Gāthās~~ | ✅ done — in corpus |
-| Sikhism | Ādi Granth | see Deferred above — OCR pipeline ready |
-| Jainism | Jain Āgamas / Tattvartha Sutra | check Gutenberg/archive; PD translations thin |
-| Ancient Egypt | Instruction of Ptahhotep | PD translations exist; short |
-| Mesopotamia | Epic of Gilgamesh (wisdom passages) | OCR/older translations |
-| Hermeticism | Corpus Hermeticum (Mead) | likely Gutenberg/archive |
-| Bahá'í | Hidden Words | short; already a lineage node |
+| ~~Zoroastrianism~~ | ~~Gāthās~~ | ✅ done |
+| ~~Sikhism~~ | ~~Ādi Granth~~ | ✅ done — Macauliffe Vol I |
+| ~~Jainism~~ | ~~Uttarādhyayana~~ | ✅ done — SBE 45 |
+| ~~Ancient Egypt~~ | ~~Ptahhotep~~ | ✅ done — Gutenberg #30508 |
+| ~~Mesopotamia~~ | ~~Babylonian hymns/psalms~~ | ✅ done — Wilson 1901 |
+| ~~Bahá'í~~ | ~~Tablets of Abdul-Baha~~ | ✅ done — Gutenberg #19312 (Hidden Words is copyrighted) |
+| Hermeticism | Corpus Hermeticum (Mead) | likely Gutenberg/archive — but no palette room left |
+| Shinto | Kojiki / Nihon Shoki | lineage nodes exist, but they're myth/chronicle, weak "wisdom" fit |
 
 ---
 

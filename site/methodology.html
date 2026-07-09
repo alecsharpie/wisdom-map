@@ -14,9 +14,9 @@
     --hairline: #e1e0d9;
     --border: rgba(11,11,11,0.10);
     --panel: #ffffff;
-    --c0: #2a78d6; --c1: #008300; --c2: #eda100;
-    --c3: #4a3aa7; --c4: #1baf7a; --c5: #e34948; --c6: #0e93a8;
-    --c7: #a06a1e; --c8: #e87ba4; --c9: #b02d8f;
+    --c0: #2a78d6; --c1: #df6317; --c2: #1baf7a; --c3: #e34948; --c4: #0e93a8;
+    --c5: #eda100; --c6: #4a3aa7; --c7: #7e991c; --c8: #b02d8f; --c9: #008300;
+    --c10: #8b4ec8; --c11: #a06a1e; --c12: #e87ba4; --c13: #6172d6; --c14: #b03b57;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -28,9 +28,9 @@
       --hairline: #2c2c2a;
       --border: rgba(255,255,255,0.10);
       --panel: #222221;
-      --c0: #3987e5; --c1: #008300; --c2: #c98500;
-      --c3: #9085e9; --c4: #199e70; --c5: #e66767; --c6: #1490a5;
-      --c7: #b07b2e; --c8: #d55181; --c9: #d45cae;
+      --c0: #3987e5; --c1: #d16a18; --c2: #199e70; --c3: #e66767; --c4: #1490a5;
+      --c5: #c98500; --c6: #9085e9; --c7: #869a2b; --c8: #d45cae; --c9: #008300;
+      --c10: #9866d8; --c11: #b07b2e; --c12: #d55181; --c13: #7182e2; --c14: #d76f88;
     }
   }
   * { box-sizing: border-box; margin: 0; }
@@ -111,7 +111,7 @@
 
   <h2 id="big-picture">The big picture</h2>
   <p>One mental model carries the whole site: <b>everything is a different projection of the
-  same two objects</b> — a table of 4,380 passages and a matrix of 4,380 "meaning vectors"
+  same two objects</b> — a table of 5,097 passages and a matrix of 5,097 "meaning vectors"
   (one embedding per passage). The pipeline below runs once, on a laptop; the site itself is
   static files. Two of the five pages don't even ship precomputed answers — the affinities
   and distinctives pages compute their statistics <em>in your browser, at load time</em>,
@@ -123,11 +123,11 @@ flowchart TB
     direction TB
     RAW["public-domain texts&lt;br/&gt;Gutenberg + archive.org"]:::file
     CHUNK["chunk.py&lt;br/&gt;split into passages"]:::step
-    PASS["passages.json&lt;br/&gt;4,380 rows · 10 traditions"]:::file
+    PASS["passages.json&lt;br/&gt;5,097 rows · 15 traditions"]:::file
     DIST["distill.py · Opus LLM 💲&lt;br/&gt;one plain-English gist per passage"]:::llm
     GIST["gists.json&lt;br/&gt;cached by text hash"]:::file
     EMB["embed_project.py · bge-large&lt;br/&gt;0.65 gist + 0.35 text → 1,024-d vector"]:::step
-    VEC["meaning vectors&lt;br/&gt;4,380 × 1,024"]:::file
+    VEC["meaning vectors&lt;br/&gt;5,097 × 1,024"]:::file
     UMAP["UMAP → 2-D positions&lt;br/&gt;cosine top-10 → neighbour lists"]:::step
     IDEAS["ideas.py · k-means k=60&lt;br/&gt;+ Opus cluster names 💲"]:::llm
     SEARCH["embed_search.py · bge-small&lt;br/&gt;re-embed at 384-d, int8-quantise"]:::step
@@ -141,9 +141,9 @@ flowchart TB
   end
   subgraph SHIP["  Static files · shipped with the site  "]
     direction TB
-    DATA["data.json · 2.2 MB&lt;br/&gt;text, gist, x/y, neighbours"]:::file
-    IJSON["ideas.json · 33 kB&lt;br/&gt;60 named clusters"]:::file
-    BIN["search.bin · 1.4 MB&lt;br/&gt;int8 vectors + scales"]:::file
+    DATA["data.json · 2.9 MB&lt;br/&gt;text, gist, x/y, neighbours"]:::file
+    IJSON["ideas.json · 37 kB&lt;br/&gt;60 named clusters"]:::file
+    BIN["search.bin · 1.6 MB&lt;br/&gt;int8 vectors + scales"]:::file
   end
   UMAP --> DATA
   IDEAS --> IJSON
@@ -152,7 +152,7 @@ flowchart TB
     direction TB
     MAP["THE MAP&lt;br/&gt;scatter + echo threads&lt;br/&gt;+ Ask the Ages search"]:::page
     IDEASPG["THE IDEAS&lt;br/&gt;bubble map of clusters"]:::page
-    AFF["THE AFFINITIES&lt;br/&gt;computes 9×9 lift live"]:::page
+    AFF["THE AFFINITIES&lt;br/&gt;computes 15×15 lift live"]:::page
     DISPG["THE DISTINCTIVES&lt;br/&gt;computes purity × lift live"]:::page
     LIN["THE LINEAGE&lt;br/&gt;hand-authored family tree&lt;br/&gt;(no pipeline at all)"]:::page
   end
@@ -184,9 +184,10 @@ flowchart TB
     <li><b>Cleanup</b> — Gutenberg italics markers, editorial footnotes <code>[…]</code>,
       "&amp;c.", and dash variants are normalised away so the models never see them.</li>
   </ul>
-  <p>Result: <b>4,380 passages</b> across ten traditions — Stoicism 759, Hebrew wisdom 685,
-  Confucianism 578, Islam 518, Buddhism 414, Hinduism 399, Taoism 361, Christianity 360,
-  Zoroastrianism 239, Epicureanism 67. These sizes matter later: every statistic on the affinities and
+  <p>Result: <b>5,097 passages</b> across fifteen traditions — Stoicism 759, Hebrew wisdom 685,
+  Confucianism 578, Islam 518, Buddhism 497, Hinduism 399, Taoism 361, Christianity 360,
+  Zoroastrianism 239, Jainism 199, Bahá'í 175, Sikhism 144, Epicureanism 67, Mesopotamia 59,
+  Ancient Egypt 57. These sizes matter later: every statistic on the affinities and
   distinctives pages is normalised so big traditions can't win by volume alone.</p>
   <p>Most texts come from Project Gutenberg as clean plain text a regex parser can split. A few
   — like the Zoroastrian Gāthās — exist only as archive.org OCR scans, where the translation is
@@ -194,6 +195,49 @@ flowchart TB
   <code>pipeline/ocr_extract.py</code>, which asks Claude Opus to pull just the numbered verses
   back out (stitching split lines, dropping the apparatus) before chunking; a canonical
   verse-count check flags anything the pass dropped or doubled.</p>
+  <p>The exact source texts — all public-domain, each with its own bespoke parser in
+  <code>chunk.py</code>:</p>
+  <table>
+    <tr><th>tradition</th><th>source text(s) · edition · id</th><th>era</th><th class="num">passages</th></tr>
+    <tr><td>Stoicism</td><td>Marcus Aurelius, <i>Meditations</i> (Long tr., Gutenberg #2680) · Epictetus, <i>Enchiridion</i> (#45109)</td><td>2nd c. CE</td><td class="num">759</td></tr>
+    <tr><td>Hebrew wisdom</td><td><i>Proverbs</i> + <i>Ecclesiastes</i> (KJV #10) · <i>Pirkei Avot</i>, "Ethics of the Fathers" (#8547)</td><td>~5th c. BCE – 2nd c. CE</td><td class="num">685</td></tr>
+    <tr><td>Confucianism</td><td><i>Analects</i> (Legge tr., #3330) · <i>Mencius</i> (#10056)</td><td>~5th–3rd c. BCE</td><td class="num">578</td></tr>
+    <tr><td>Islam</td><td><i>Qur'an</i> (Rodwell tr., #3434) · Rumi, <i>Masnavi</i> (#45159)</td><td>7th c. · 13th c. CE</td><td class="num">518</td></tr>
+    <tr><td>Buddhism</td><td><i>Dhammapada</i> (Pāli canon, #2017)</td><td>~3rd c. BCE</td><td class="num">414</td></tr>
+    <tr><td>Hinduism</td><td><i>Bhagavad Gita</i> (#2388) · <i>Upanishads</i> (#3283)</td><td>~8th–2nd c. BCE</td><td class="num">399</td></tr>
+    <tr><td>Taoism</td><td><i>Zhuangzi</i>, Inner Chapters (#59709) · <i>Tao Te Ching</i> (#216)</td><td>~4th c. BCE</td><td class="num">361</td></tr>
+    <tr><td>Christianity</td><td>New Testament teaching chapters — Matthew, Luke, John, Romans, 1&nbsp;Corinthians, James (KJV #10)</td><td>1st c. CE</td><td class="num">360</td></tr>
+    <tr><td>Zoroastrianism</td><td><i>Gāthās</i> (Mills tr., Sacred Books of the East vol. 31 — archive.org OCR scan)</td><td>~2nd millennium BCE</td><td class="num">239</td></tr>
+    <tr><td>Epicureanism</td><td>Epicurus, <i>Letter to Menoeceus</i> + <i>Principal Doctrines</i> (#57342)</td><td>~3rd c. BCE</td><td class="num">67</td></tr>
+  </table>
+  <div class="cap"><code>#nnnn</code> = Project Gutenberg book id (clean plain text). One book, KJV #10,
+  supplies both the Hebrew-wisdom books and the Christian teaching chapters. The Gāthās are the
+  only non-Gutenberg source — an OCR scan, hence the extra extraction step above.</div>
+
+  <h3>Licensing — why every source is free to use</h3>
+  <p>The corpus is built <b>entirely from public-domain material</b>, and deliberately so: the
+  underlying scriptures are ancient, and each specific <em>translation</em> here is a 19th- or
+  early-20th-century edition whose copyright has long since lapsed (their translators — James
+  Legge, J.&nbsp;M. Rodwell, George Long, L.&nbsp;H. Mills and their contemporaries — all died a
+  century or more ago, so the texts are public domain under both the US pre-1929 rule and the
+  life-plus-70 rule most of the world uses). Nothing here relies on a modern copyrighted
+  translation.</p>
+  <p>Two practical notes on how that public-domain status flows through the pipeline:</p>
+  <ul>
+    <li><b>Project Gutenberg.</b> A Gutenberg file is public-domain text wrapped in a trademark
+      license: the <em>License</em> governs redistribution under the "Project Gutenberg" name and
+      its header/footer boilerplate, not the transcribed work itself. <code>chunk.py</code> strips
+      that boilerplate and keeps only the bare public-domain text, so nothing on this site carries
+      the Gutenberg trademark or its terms.</li>
+    <li><b>The archive.org Gāthās.</b> A faithful reproduction of a public-domain book adds no new
+      copyright, so the scanned <i>Sacred Books of the East</i> vol.&nbsp;31 (Mills, 1887) is as
+      free to use as any Gutenberg text — the OCR step just cleans it, it doesn't relicense it.</li>
+  </ul>
+  <p>Two honest caveats. "Public domain" is a <em>copyright</em> status, not a claim about
+  translation quality or canonical standing — these are the freely-available editions, not
+  necessarily the best modern ones, and that choice shapes what the map can see. And the site
+  never reproduces a whole work: each passage is a short excerpt shown alongside its
+  machine-written gist, well within fair use even were any source still in copyright.</p>
 
   <h2 id="distill"><span class="n">2</span>The distillation — why an LLM is in the loop</h2>
   <p>The first version of the map embedded raw text only, and it failed in an instructive
@@ -211,7 +255,7 @@ flowchart TB
   every call's cost read from the CLI's JSON output and summed, a probe batch first, and a
   budget stop. Gists are cached in <code>gists.json</code> keyed by a hash of the
   passage text, so re-runs only pay for new passages. Total spent distilling the current
-  corpus with Opus: <b>~$17</b>.</p>
+  corpus with Opus: <b>~$22</b>.</p>
 
   <h2 id="embed"><span class="n">3</span>The embedding — one meaning vector per passage</h2>
   <p>Both the original text and the gist are embedded with
@@ -268,14 +312,14 @@ flowchart LR
 flowchart TB
   subgraph P["  Pipeline time · once, locally  "]
     direction LR
-    C["all 4,380 passages&lt;br/&gt;same 0.65 / 0.35 gist blend"]:::file --> S1["bge-small-en-v1.5&lt;br/&gt;384-d, full precision"]:::step
-    S1 --> Q8["int8 quantise&lt;br/&gt;one scale per vector"]:::step --> BINF["search.bin · 1.4 MB&lt;br/&gt;ships with the site"]:::file
+    C["all 5,097 passages&lt;br/&gt;same 0.65 / 0.35 gist blend"]:::file --> S1["bge-small-en-v1.5&lt;br/&gt;384-d, full precision"]:::step
+    S1 --> Q8["int8 quantise&lt;br/&gt;one scale per vector"]:::step --> BINF["search.bin · 1.6 MB&lt;br/&gt;ships with the site"]:::file
   end
   subgraph B["  Visit time · in your browser  "]
     direction LR
     QY["your question&lt;br/&gt;“I'm afraid of dying”"]:::file --> PFX["add bge's query prefix&lt;br/&gt;“Represent this sentence…”"]:::step
     PFX --> S2["the same bge-small&lt;br/&gt;via transformers.js · 34 MB ONNX,&lt;br/&gt;downloaded once behind a consent prompt"]:::step
-    S2 --> DOT["dot product against all&lt;br/&gt;4,380 vectors ≈ instant"]:::step --> TOP["top 20 passages&lt;br/&gt;halos on the map,&lt;br/&gt;panel grouped by tradition"]:::page
+    S2 --> DOT["dot product against all&lt;br/&gt;5,097 vectors ≈ instant"]:::step --> TOP["top 20 passages&lt;br/&gt;halos on the map,&lt;br/&gt;panel grouped by tradition"]:::page
   end
   BINF -.-> DOT
   classDef file fill:@FILEBG,stroke:@FILEBR,color:@INK,stroke-width:1.5px
@@ -294,7 +338,7 @@ flowchart TB
   Each cluster becomes a bubble:</p>
   <div class="fig"><pre class="mermaid">
 flowchart LR
-  V["meaning vectors&lt;br/&gt;4,380 × 1,024"]:::file --> KM["k-means&lt;br/&gt;k = 60"]:::step
+  V["meaning vectors&lt;br/&gt;5,097 × 1,024"]:::file --> KM["k-means&lt;br/&gt;k = 60"]:::step
   KM --> CL["60 clusters&lt;br/&gt;passages sorted by&lt;br/&gt;closeness to centroid"]:::file
   CL --> CO["per-tradition counts&lt;br/&gt;→ ring segments +&lt;br/&gt;spread score eff"]:::step
   CL --> LB["12 sample gists per cluster&lt;br/&gt;→ Opus names it 💲&lt;br/&gt;cached by sample hash"]:::llm
@@ -309,13 +353,14 @@ flowchart LR
   </pre></div>
   <p>The "most shared" ranking uses <b>eff — the effective number of traditions</b>:
   exp(entropy) of the cluster's tradition shares. Intuition: a cluster split 50/50 between
-  two traditions scores exactly 2.0; spread evenly across all nine it would score 9.0; one
-  passage from an eighth tradition barely moves it. It measures <em>even spread</em>, not
+  two traditions scores exactly 2.0; spread evenly across all ten it would score 10.0; one
+  passage from a tenth tradition barely moves it. It measures <em>even spread</em>, not
   just presence.</p>
   <div class="example">
-    <b>"Detachment from desire liberates"</b> — 37 passages: 30 Buddhist, 4 Stoic, 2 Hindu,
-    1 Epicurean. Touches four traditions, but Buddhism dominates → eff = 1.95, honestly
-    closer to "one and a bit traditions" than four.
+    <b>"Freedom through releasing craving"</b> — 77 passages: 44 Buddhist, 26 Hindu, then a
+    scattering of Confucian, Epicurean, Hebrew, and Taoist. Touches six traditions, but
+    Buddhism and Hinduism dominate → eff = 2.8, honestly closer to "two or three traditions"
+    than six.
   </div>
 
   <h3>The affinities (<code>affinities.html</code>)</h3>
@@ -324,24 +369,27 @@ flowchart LR
   tradition B — <b>compared to what chance would predict from B's size alone?</b></p>
   <div class="fig"><pre class="mermaid">
 flowchart LR
-  A["Christianity's 360 passages&lt;br/&gt;× 10 neighbour slots&lt;br/&gt;= 3,600 looks outward"]:::file --> O["observed:&lt;br/&gt;750 land on Islam"]:::step
-  N["Islam is 421 of 3,634&lt;br/&gt;other passages ≈ 11.6%"]:::file --> E["expected by chance:&lt;br/&gt;3,600 × 11.6% ≈ 417"]:::step
-  O --> L["lift = 750 / 417 = 1.80"]:::page
+  A["Christianity's 360 passages&lt;br/&gt;× 10 neighbour slots&lt;br/&gt;= 3,600 looks outward"]:::file --> O["observed:&lt;br/&gt;646 land on Islam"]:::step
+  N["Islam is 518 of 4,379&lt;br/&gt;other passages ≈ 11.8%"]:::file --> E["expected by chance:&lt;br/&gt;3,600 × 11.8% ≈ 426"]:::step
+  O --> L["lift = 646 / 426 = 1.52"]:::page
   E --> L
-  L --> SYM["symmetrised cell =&lt;br/&gt;mean of both directions&lt;br/&gt;(1.80 + 0.65) / 2 = 1.23"]:::page
+  L --> SYM["symmetrised cell =&lt;br/&gt;mean of both directions&lt;br/&gt;(1.52 + 1.00) / 2 = 1.26"]:::page
   classDef file fill:@FILEBG,stroke:@FILEBR,color:@INK,stroke-width:1.5px
   classDef step fill:@STEPBG,stroke:@STEPBR,color:@INK
   classDef page fill:@PAGEBG,stroke:@PAGEBR,color:@INK,stroke-width:1.5px
   </pre></div>
   <div class="cap">A real worked example — the strongest cell in the matrix. Note the
   asymmetry the mean hides (hover any cell to see it): Christian passages reach toward the
-  Quran far more (1.80) than Quranic passages reach back (0.65) — consistent with Islam's
-  42% island share below.</div>
+  Quran markedly more (1.52) than Quranic passages reach back (1.00 — dead on chance), since
+  the far larger Islamic corpus has more of its own to echo.</div>
   <p>Lift 1.0 = exactly chance. The normalisation is the whole point: without it, 759-passage
   Stoicism would dominate every row simply by being everywhere. The quiet headline is that
-  the four historically linked pairs — Christianity↔Islam, Buddhism↔Hinduism,
-  Epicureanism↔Stoicism, Confucianism↔Taoism — are precisely the four cells above 1.0.
-  Nothing in the pipeline knows any history; the lineages re-emerge from meaning alone.</p>
+  historically linked pairs surface on their own: Christianity↔Islam (1.26),
+  Confucianism↔Taoism (1.19) and Epicureanism↔Stoicism (1.13) are the three strongest cells in
+  the matrix, and Islam↔Zoroastrianism (1.04) sits just above chance too. The one near-miss is
+  Buddhism↔Hinduism (0.98) — Buddhist passages lean Hindu (1.23), but Hindu passages lean back
+  toward their own metaphysics. Nothing in the pipeline knows any history; these convergences
+  re-emerge from meaning alone.</p>
   <p>Clicking a cell ranks the actual passage pairs behind the number (every A-passage's
   neighbour links into B, deduplicated, sorted by cosine) — so the summary statistic is
   always one click from its raw evidence.</p>
@@ -350,14 +398,14 @@ flowchart LR
   <p>The inverse question: which clusters does one tradition dominate <em>beyond its size</em>?
   Also computed at page load. For each tradition T and cluster c (where T has ≥ 3 passages):</p>
   <ul>
-    <li><b>purity</b> = T's share of the cluster ("30 of 37 passages").</li>
+    <li><b>purity</b> = T's share of the cluster ("44 of 77 passages").</li>
     <li><b>lift</b> = purity ÷ T's share of the whole corpus, so small voices can rank.</li>
     <li>ideas are ranked by <b>purity × lift</b>; deliberately <em>no</em> hard purity
-      cut-off — at k=60 Taoism's best cluster is only 26% pure (it's 3% of the corpus, so
-      that's still 7.7× its share) and a 70% bar would erase the small traditions
+      cut-off — at k=60 Epicureanism's best cluster is only 33% pure (it's 1.5% of the corpus,
+      so that's still 21× its share) and a 70% bar would erase the smallest traditions
       entirely. Instead the purity is printed plainly on every row.</li>
     <li>each card also shows the <b>island share</b> — the % of passages with resonance 0.
-      It spans a striking range: Epicureanism 0%, Islam 42%.</li>
+      It spans a wide range: Epicureanism and Christianity 0%, Zoroastrianism 14%.</li>
   </ul>
 
   <h3>The lineage (<code>lineage.html</code>)</h3>
@@ -393,7 +441,7 @@ flowchart LR
   <table>
     <tr><th>bytes</th><th>content</th></tr>
     <tr><td class="num">0–3</td><td>magic <code>"WMS1"</code></td></tr>
-    <tr><td class="num">4–11</td><td>uint32 N = 4,380 · uint32 D = 384</td></tr>
+    <tr><td class="num">4–11</td><td>uint32 N = 5,097 · uint32 D = 384</td></tr>
     <tr><td class="num">12 …</td><td>N × float32 dequantisation scales</td></tr>
     <tr><td class="num">then</td><td>N × D int8 vectors, row-major (vector = int8 × scale)</td></tr>
   </table>
@@ -401,7 +449,7 @@ flowchart LR
   <h2 id="honesty">Caveats &amp; costs</h2>
   <ul>
     <li><b>Everything is corpus-relative.</b> "Distinctly Hindu" means "rare in the other
-      eight text selections here", not "absent from human thought". The Christianity sample
+      nine text selections here", not "absent from human thought". The Christianity sample
       is the New Testament's teaching chapters, which likely tilts its affinities toward
       Hebrew wisdom.</li>
     <li><b>Two AI layers sit between you and the text</b>: the gists (which steer the
@@ -409,8 +457,9 @@ flowchart LR
       never instead of it.</li>
     <li><b>Reproducible by construction</b>: fixed random seeds, content-hash caches, and
       the map's x/y reused by the ideas layout, so re-runs don't shuffle the site.</li>
-    <li><b>Total LLM spend: $4.23</b> (distillation $4.08, cluster naming $0.15). The
-      embeddings, projections, affinities, distinctives, and every search query: $0.</li>
+    <li><b>Total LLM spend: ~$31</b> (distillation ~$22, OCR verse-extraction ~$7, cluster naming ~$2, plus a few cents
+      for the Gāthās OCR pass). The embeddings, projections, affinities, distinctives, and
+      every search query: $0.</li>
     <li>An interpretive curiosity, not a theological claim.</li>
   </ul>
 
