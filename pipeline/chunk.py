@@ -415,10 +415,24 @@ def rumi(records):
         emit(records, "Islam", "Rumi", title, text)
 
 
+# --- Zoroastrianism: the Gathas (SBE 31, Mills). Not parsed from raw OCR here —
+# the scan is too noisy for regex, so pipeline/ocr_extract.py distils it into clean
+# numbered verses first (data/raw/zoroastrianism.clean.json); we just emit those. ---
+def zoroastrianism(records):
+    path = RAW / "zoroastrianism.clean.json"
+    if not path.exists():
+        print("  (skip Zoroastrianism: run pipeline/ocr_extract.py first)")
+        return
+    for v in json.loads(path.read_text(encoding="utf-8")):
+        emit(records, "Zoroastrianism", "Gathas", f"Yasna {v['yasna']}.{v['verse']}",
+             v["text"])
+
+
 def main():
     records = []
     for fn in (tao, dhammapada, meditations, enchiridion, kjv, gita, analects,
-               quran, upanishads, epicurus, zhuangzi, mencius, pirkei_avot, rumi):
+               quran, upanishads, epicurus, zhuangzi, mencius, pirkei_avot, rumi,
+               zoroastrianism):
         before = len(records)
         fn(records)
         src = records[-1]["source"] if len(records) > before else fn.__name__

@@ -14,4 +14,16 @@ for id in 216 2017 2680 10 2388 3330 45109 3434 3283 57342 59709 10056 8547 4515
   [ -f "pg${id}.txt" ] || curl -sL -o "pg${id}.txt" "https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt" &
 done
 wait
+
+# archive.org OCR scans (djvu.txt). Unlike Gutenberg these are messy OCR, cleaned
+# downstream by pipeline/ocr_extract.py (LLM). The djvu.txt filename is NOT
+# "<id>_djvu.txt" — it's prefixed by the item's own title, so resolve it from the
+# metadata API first. Format: local_name=archive_id
+for spec in "zoro_sbe31.txt=in.ernet.dli.2015.110222"; do   # SBE 31 = the Gathas (Mills 1887)
+  out="${spec%%=*}"; id="${spec##*=}"
+  [ -f "$out" ] && continue
+  fn=$(curl -sL "https://archive.org/metadata/${id}/files" \
+       | tr ',' '\n' | grep -oE '"[^"]*_djvu\.txt"' | head -1 | tr -d '"')
+  [ -n "$fn" ] && curl -sL -o "$out" "https://archive.org/download/${id}/${fn}"
+done
 ls -la
