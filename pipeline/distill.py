@@ -22,9 +22,9 @@ from threading import Lock
 ROOT = Path(__file__).resolve().parent.parent
 CACHE_PATH = ROOT / "data" / "gists.json"
 BATCH = 60
-WORKERS = 4
-MODEL = "haiku"
-BUDGET_USD = 5.0
+WORKERS = 2
+MODEL = "opus"
+BUDGET_USD = 30.0
 
 PROMPT = (
     "For each passage in the JSON array on stdin, distill its core idea into one plain "

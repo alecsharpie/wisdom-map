@@ -62,7 +62,7 @@ copyrighted. The Sermon on the Mount and the Enchiridion stand in.)
   count whose ring shows which traditions arrive at it; a "most shared ideas"
   list ranks ideas by how evenly they spread across traditions (effective number
   of traditions). Click a bubble for its composition and passages, grouped by
-  tradition. Cluster names are Haiku one-liners (`pipeline/ideas.py`, cached in
+  tradition. Cluster names are Opus one-liners (`pipeline/ideas.py`, cached in
   `data/idea_labels.json`).
 - **The lineage** (`site/lineage.html`) — a *family tree of scripture*: ~30 major
   religious texts and traditions placed left-to-right by date and coloured by the
@@ -102,7 +102,7 @@ uv run pipeline/ideas.py             # cluster + label    -> site/ideas.json
 uv run pipeline/embed_search.py      # bge-small re-embed -> site/search.bin
 ```
 
-The distill step calls `claude -p` (Haiku) in 60-passage batches; it tracks and
+The distill step calls `claude -p` (Opus) in 60-passage batches; it tracks and
 prints total cost (~$3.50 for the full corpus), caches per passage, and stops
 if a probe batch projects past its budget. The embed step is a self-contained
 uv script (sentence-transformers `BAAI/bge-large-en-v1.5`, UMAP with a fixed

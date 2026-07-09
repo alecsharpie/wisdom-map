@@ -231,6 +231,8 @@
       blurb:"Attributed to Laozi. The foundational scripture of philosophical Taoism." },
     { id:"zhuangzi", label:"Zhuangzi", fam:"sinitic", lang:"Classical Chinese", place:"China", year:-300, date:"c. 3rd c. BCE", row:3, p:[["taote","d"]],
       blurb:"The other great early Taoist book — parables and paradox elaborating the Tao." },
+    { id:"mencius", label:"Mencius", fam:"sinitic", lang:"Classical Chinese", place:"Zou & Qi, China", year:-300, date:"c. 4th–3rd c. BCE", row:0, p:[["analects","d"]],
+      blurb:"The “Second Sage” — developed Confucius a century on: human nature is good, and rulers govern by virtue or forfeit the mandate." },
     { id:"kojiki", label:"Kojiki", fam:"japonic", lang:"Old Japanese / Chinese", place:"Japan", year:712, date:"712 CE", row:0, p:[],
       blurb:"“Record of Ancient Matters” — Japan's oldest chronicle and a core Shinto text." },
     { id:"nihonshoki", label:"Nihon Shoki", fam:"japonic", lang:"Classical Chinese", place:"Japan", year:720, date:"720 CE", row:1, p:[["kojiki","i"]],
@@ -285,6 +287,8 @@
       blurb:"Compiled reports of Muhammad's words and deeds — second only to the Qur'an in Islamic authority." },
     { id:"bahai", label:"Bahá'í writings", fam:"semitic", lang:"Arabic & Persian", place:"Persia / Ottoman lands", year:1863, date:"19th c. CE", row:12, p:[["quran","d"]],
       blurb:"The scriptures of the Bahá'í Faith, which grew out of Shia Islam and claims continuity with all the prophets before it." },
+    { id:"rumi", label:"Masnavi (Rūmī)", fam:"iranian", lang:"Persian", place:"Konya, Anatolia", year:1273, date:"13th c. CE", row:13, p:[["quran","d"]],
+      blurb:"Rumi's vast Sufi poem — Islam's monotheism turned inward into a Persian mysticism of love, longing and union with God." },
   ];
 
   // ---------- core ideas: what each text is about, at a glance ----------
@@ -293,6 +297,7 @@
     analects:   ["Ren — humaneness and benevolence", "Li — ritual and right conduct", "The junzi, the exemplary person", "Filial piety and social harmony", "Govern by moral example, not force"],
     taote:      ["The Tao — the Way beyond words", "Wu wei — effortless, non-forcing action", "The strength of softness and yielding", "Return to simplicity and nature"],
     zhuangzi:   ["Spontaneity and inner freedom", "The relativity of every viewpoint", "The equanimity of the sage", "The usefulness of the useless"],
+    mencius:    ["Human nature is innately good", "The 'four sprouts' of virtue", "Government by benevolence (ren zheng)", "The people matter most, the ruler least", "The right to depose a tyrant"],
     kojiki:     ["Origin of the kami and the islands", "Amaterasu, the sun goddess", "Divine descent of the imperial line", "Purity and reverence for nature"],
     nihonshoki: ["The same creation myths, in fuller form", "An early imperial chronicle", "History written in the Chinese annals style"],
     pie:        ["A reconstructed sky-father (*Dyḗus)", "Fire, sacrifice and cosmic order", "A herder–warrior–priest society"],
@@ -316,12 +321,14 @@
     quran:      ["Tawḥīd — the absolute oneness of God", "Islām — submission to God", "A line of prophets ending with Muhammad", "Divine judgment and mercy"],
     hadith:     ["The example (sunna) of Muhammad", "A guide to law and daily practice", "Reports graded by their chains of transmission"],
     bahai:      ["Unity of God", "Unity of religion (progressive revelation)", "Unity of humankind"],
+    rumi:       ["Love as the path to God", "Union of the soul with the divine", "Longing and separation (the reed's cry)", "All paths point to one Beloved"],
   };
 
   // ---------- what actually flows along each edge ("from>to") ----------
   const WHY = {
     "wuclassics>analects": "Confucius presented himself as a transmitter, not an inventor — his teaching reads and reinterprets the ancient classics.",
     "taote>zhuangzi": "Elaborates the Tao Te Ching's terse Way into stories, humour and paradox.",
+    "analects>mencius": "Mencius took up Confucius's teaching a century later and argued its foundations — that human nature is good and a ruler keeps Heaven's mandate only by serving the people.",
     "kojiki>nihonshoki": "A parallel, fuller retelling of the same myths, compiled for the court eight years later.",
     "pie>piir": "Language-and-religion descent: the parent tongue and its pantheon split, and the Indo-Iranian branch carried them off together.",
     "piir>vedas": "The Indo-Aryan half of the split brought the fire ritual, the soma cult and gods like Mitra and Varuṇa into India.",
@@ -348,6 +355,7 @@
     "newtestament>quran": "It honours Jesus as a prophet and Mary his mother, and calls the Gospel (Injīl) an earlier scripture from God.",
     "quran>hadith": "Reports of Muhammad's own words and deeds — second only to the Qur'an in authority.",
     "quran>bahai": "The Bahá'í Faith grew out of Shia Islam, holding that prophecy continued rather than ended with Muhammad.",
+    "quran>rumi": "Rumi's poetry is steeped in the Qur'an — he turns its call to submit to God into an inward Sufi mysticism of love and union.",
   };
   const whyOf = (from, to) => WHY[from + ">" + to] || "";
 
@@ -357,6 +365,7 @@
     analects: "Short sayings and dialogues remembered by Confucius's students after his death in 479 BCE. It never lays out a system; it models a way of living through terse exchanges on ritual, learning, friendship and government, and became the founding text of the Confucian tradition.",
     taote: "Eighty-one brief, cryptic verses traditionally ascribed to the sage Laozi, though likely gathered over time. It praises the Tao — the nameless 'Way' underlying all things — and counsels acting by not-forcing (wu wei), yielding like water and returning to simplicity.",
     zhuangzi: "Stories, fables and fragments named for the 4th-century-BCE thinker Zhuangzi. Playful and skeptical where the Tao Te Ching is gnomic, it questions every fixed distinction — the famous butterfly dream — and celebrates spontaneity and freedom from convention.",
+    mencius: "The teachings of Mèng Kē (Mencius, c. 372–289 BCE), the most influential Confucian after Confucius himself. Through blunt dialogues with kings he argued that human nature is innately good — everyone is born with the 'sprouts' of compassion and shame — and that a ruler holds Heaven's mandate only while he governs for the people's welfare; a tyrant may rightfully be deposed.",
     kojiki: "Compiled in 712 CE at the imperial court, the 'Record of Ancient Matters' gathers myth, legend and genealogy: the birth of the islands, the deeds of the kami, and the descent of the imperial line from the sun-goddess Amaterasu. A foundational source for Shinto.",
     nihonshoki: "Completed in 720 CE, the 'Chronicles of Japan' retells the same myths in a more elaborate, Chinese-style annalistic history and carries the record into historical times. Written largely in classical Chinese, it was the more official of the two early court chronicles.",
     pie: "Not a text but a reconstruction: by comparing Sanskrit, Greek, Latin, Persian and other languages, scholars have recovered a common ancestral tongue — and glimpses of its religion, including a sky-father (*Dyḗus ph₂tḗr), fire and sacrifice. From it descend the Vedic, Iranian, Greek and Roman traditions.",
@@ -380,6 +389,7 @@
     quran: "Muslims hold the Qur'an to be the literal word of God revealed to Muhammad over c. 610–632 CE in Classical Arabic, and gathered into 114 sūras soon after. It insists on the absolute oneness of God and names Adam, Abraham, Moses and Jesus among the prophets before Muhammad, completing their message.",
     hadith: "Reports of what Muhammad said, did and approved, transmitted through chains of narrators and sifted for reliability by 9th-century collectors such as Bukhari and Muslim. Together they form the sunna — the Prophet's example — the second source, after the Qur'an, of Islamic law and life.",
     bahai: "The writings of the Báb and, above all, Baháʼu'lláh (1817–1892), whose movement grew out of Shia Islam in 19th-century Persia. They teach the oneness of God, the essential unity of the great religions as stages of one unfolding revelation, and the unity of humankind.",
+    rumi: "The Masnavī of Jalāl al-Dīn Rūmī (1207–1273), composed in Persian at Konya in Anatolia, is among the supreme works of Sufi mysticism — later Persians called it 'the Qur'an in Persian.' Across tens of thousands of couplets of story and song it teaches that the soul, like a reed cut from its bed, aches to return to God, and that love is the road home.",
   };
 
   // ---------- one verified source link per node (Wikipedia entry points) ----------
@@ -388,6 +398,7 @@
     analects: "https://en.wikipedia.org/wiki/Analects",
     taote: "https://en.wikipedia.org/wiki/Tao_Te_Ching",
     zhuangzi: "https://en.wikipedia.org/wiki/Zhuangzi_(book)",
+    mencius: "https://en.wikipedia.org/wiki/Mencius_(book)",
     kojiki: "https://en.wikipedia.org/wiki/Kojiki",
     nihonshoki: "https://en.wikipedia.org/wiki/Nihon_Shoki",
     pie: "https://en.wikipedia.org/wiki/Proto-Indo-European_mythology",
@@ -411,6 +422,7 @@
     quran: "https://en.wikipedia.org/wiki/Quran",
     hadith: "https://en.wikipedia.org/wiki/Hadith",
     bahai: "https://en.wikipedia.org/wiki/Bah%C3%A1%CA%BC%C3%AD_literature",
+    rumi: "https://en.wikipedia.org/wiki/Masnavi",
   };
 
   const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
@@ -422,7 +434,7 @@
     wuclassics:0, kojiki:0,
     analects:1, nihonshoki:1,
     taote:2,
-    zhuangzi:3,
+    zhuangzi:3, mencius:4,
     // Indo-Iranian roots
     pie:4, piir:5,
     // Hindu chain (one horizontal row)
@@ -437,6 +449,7 @@
     protosemitic:10, hebrewbible:10, talmud:10,
     quran:11, hadith:11, bahai:11,
     septuagint:12, newtestament:12, vulgate:12,
+    rumi:13,
   };
   NODES.forEach(n => { if (n.id in LAYOUT) n.row = LAYOUT[n.id]; });
 
@@ -472,7 +485,7 @@
   // ---------- grid (time axis) ----------
   const TICKS = [[-4000,"4000 BCE"],[-2000,"2000 BCE"],[-1000,"1000 BCE"],[-500,"500 BCE"],
                  [1,"1 CE"],[500,"500 CE"],[1000,"1000 CE"],[1500,"1500 CE"],[1900,"1900 CE"]];
-  const GRID_TOP = 40, GRID_BOT = yFor(12) + 46;
+  const GRID_TOP = 40, GRID_BOT = yFor(13) + 46;
   TICKS.forEach(([y,lab]) => {
     const x = xFor(y);
     gGrid.appendChild(el("line", { x1:x, y1:GRID_TOP, x2:x, y2:GRID_BOT }));

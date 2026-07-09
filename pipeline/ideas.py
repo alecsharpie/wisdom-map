@@ -8,7 +8,7 @@
 """Cluster the passage embeddings into named ideas -> site/ideas.json
 
 The higher-level view: k-means over the same blended (gist + text) embeddings
-the map uses, one short Haiku-written name per cluster, and a per-cluster
+the map uses, one short LLM-written name per cluster, and a per-cluster
 tradition composition so you can see which ideas are shared and which are
 unique. Labels are cached in data/idea_labels.json by cluster content, so
 re-runs cost nothing unless clusters change.
@@ -31,8 +31,8 @@ MODEL = "BAAI/bge-large-en-v1.5"   # must match embed_project.py
 GIST_WEIGHT = 0.65                 # must match embed_project.py
 K = 60
 SEED = 42
-LLM = "haiku"
-BUDGET_USD = 1.0
+LLM = "opus"
+BUDGET_USD = 3.0
 LABEL_BATCH = 15  # clusters per claude call
 SAMPLES = 12      # gists shown per cluster
 

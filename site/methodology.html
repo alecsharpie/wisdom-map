@@ -124,12 +124,12 @@ flowchart TB
     RAW["18 public-domain texts&lt;br/&gt;Project Gutenberg"]:::file
     CHUNK["chunk.py&lt;br/&gt;split into passages"]:::step
     PASS["passages.json&lt;br/&gt;3,635 rows · 9 traditions"]:::file
-    DIST["distill.py · Haiku LLM 💲&lt;br/&gt;one plain-English gist per passage"]:::llm
+    DIST["distill.py · Opus LLM 💲&lt;br/&gt;one plain-English gist per passage"]:::llm
     GIST["gists.json&lt;br/&gt;cached by text hash"]:::file
     EMB["embed_project.py · bge-large&lt;br/&gt;0.65 gist + 0.35 text → 1,024-d vector"]:::step
     VEC["meaning vectors&lt;br/&gt;3,635 × 1,024"]:::file
     UMAP["UMAP → 2-D positions&lt;br/&gt;cosine top-10 → neighbour lists"]:::step
-    IDEAS["ideas.py · k-means k=60&lt;br/&gt;+ Haiku cluster names 💲"]:::llm
+    IDEAS["ideas.py · k-means k=60&lt;br/&gt;+ Opus cluster names 💲"]:::llm
     SEARCH["embed_search.py · bge-small&lt;br/&gt;re-embed at 384-d, int8-quantise"]:::step
     RAW --> CHUNK --> PASS --> DIST --> GIST
     PASS --> EMB
@@ -193,7 +193,7 @@ flowchart TB
   <p>The first version of the map embedded raw text only, and it failed in an instructive
   way: embeddings latched onto <em>vocabulary</em>, not ideas. Every "The Master said…"
   clustered with every other one; "love/hate" passages grouped by the words themselves. So
-  every passage is first <b>distilled by Claude Haiku into one plain modern-English
+  every passage is first <b>distilled by Claude Opus into one plain modern-English
   sentence</b> — the claim, stripped of speaker framing, archaic wording, and metaphor:</p>
   <div class="example">
     <b>Matthew 6:24</b> — "No man can serve two masters: for either he will hate the one,
@@ -215,7 +215,7 @@ flowchart TB
   <div class="fig"><pre class="mermaid">
 flowchart LR
   T["original passage&lt;br/&gt;“No man can serve two masters…”"]:::file --> ET["bge-large&lt;br/&gt;1,024-d vector"]:::step
-  G["Haiku gist&lt;br/&gt;“You can't serve both God and money…”"]:::file --> EG["bge-large&lt;br/&gt;1,024-d vector"]:::step
+  G["Opus gist&lt;br/&gt;“You can't serve both God and money…”"]:::file --> EG["bge-large&lt;br/&gt;1,024-d vector"]:::step
   ET --> B["blend&lt;br/&gt;0.35 × text + 0.65 × gist"]:::step
   EG --> B
   B --> V["renormalise to length 1&lt;br/&gt;= the passage's meaning vector"]:::file
@@ -291,7 +291,7 @@ flowchart LR
   V["meaning vectors&lt;br/&gt;3,635 × 1,024"]:::file --> KM["k-means&lt;br/&gt;k = 60"]:::step
   KM --> CL["60 clusters&lt;br/&gt;passages sorted by&lt;br/&gt;closeness to centroid"]:::file
   CL --> CO["per-tradition counts&lt;br/&gt;→ ring segments +&lt;br/&gt;spread score eff"]:::step
-  CL --> LB["12 sample gists per cluster&lt;br/&gt;→ Haiku names it 💲&lt;br/&gt;cached by sample hash"]:::llm
+  CL --> LB["12 sample gists per cluster&lt;br/&gt;→ Opus names it 💲&lt;br/&gt;cached by sample hash"]:::llm
   CL --> LY["bubble layout: area ∝ passages,&lt;br/&gt;seeded at the cluster's mean map&lt;br/&gt;position, overlaps relaxed apart"]:::step
   CO --> PG["THE IDEAS page"]:::page
   LB --> PG
@@ -369,7 +369,7 @@ flowchart LR
     <tr><th>field</th><th>meaning</th><th>produced by</th></tr>
     <tr><td><code>text</code></td><td>the passage, cleaned</td><td>chunk.py</td></tr>
     <tr><td><code>t</code> / <code>s</code> / <code>ref</code></td><td>tradition index · source index · reference (e.g. "ch. 1")</td><td>chunk.py</td></tr>
-    <tr><td><code>g</code></td><td>the Haiku gist (absent if distillation returned the text unchanged)</td><td>distill.py</td></tr>
+    <tr><td><code>g</code></td><td>the Opus gist (absent if distillation returned the text unchanged)</td><td>distill.py</td></tr>
     <tr><td><code>x</code>, <code>y</code></td><td>UMAP position, normalised to [0, 1]²</td><td>embed_project.py</td></tr>
     <tr><td><code>nb</code></td><td>top-10 neighbours as <code>[passage id, cosine]</code> pairs, full 1,024-d space</td><td>embed_project.py</td></tr>
     <tr><td><code>r</code></td><td>resonance: distinct <em>other</em> traditions among the 10 neighbours (0 = island)</td><td>embed_project.py</td></tr>
@@ -377,7 +377,7 @@ flowchart LR
   <h3><code>ideas.json</code> — one record per cluster</h3>
   <table>
     <tr><th>field</th><th>meaning</th><th>produced by</th></tr>
-    <tr><td><code>label</code>, <code>desc</code></td><td>3–5-word name + one-sentence idea</td><td>Haiku (cached)</td></tr>
+    <tr><td><code>label</code>, <code>desc</code></td><td>3–5-word name + one-sentence idea</td><td>Opus (cached)</td></tr>
     <tr><td><code>n</code>, <code>counts</code></td><td>cluster size · passages per tradition (ring segments)</td><td>k-means</td></tr>
     <tr><td><code>eff</code></td><td>effective number of traditions, exp(entropy of shares)</td><td>ideas.py</td></tr>
     <tr><td><code>ids</code></td><td>member passage ids, sorted by closeness to the centroid</td><td>ideas.py</td></tr>
