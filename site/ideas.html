@@ -68,10 +68,12 @@
   svg { width: 100%; height: 100%; display: block; }
   .bubble { cursor: pointer; }
   .bubble circle.body { fill: var(--panel); stroke: var(--border); stroke-width: 1; transition: opacity 0.15s; }
-  .bubble text { fill: var(--ink-2); pointer-events: none;
-    paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+  .bubble .lbl { fill: var(--ink-2); pointer-events: none;
+    paint-order: stroke; stroke: var(--page); stroke-width: 3.5px; stroke-linejoin: round; }
+  .bubble .lbl.in { fill: var(--ink); font-weight: 500; stroke: var(--panel); stroke-width: 2.5px; }
   .bubble.dim { opacity: 0.16; }
   .bubble:hover circle.body, .bubble.sel circle.body { stroke: var(--ink-2); }
+  .bubble:hover .lbl, .bubble.sel .lbl { fill: var(--ink); font-weight: 550; }
   .seg { fill: none; pointer-events: none; }
   #tip {
     position: fixed; z-index: 5; max-width: 320px;
@@ -215,18 +217,103 @@
 
   // ---------- svg ----------
   const NS = 'http://www.w3.org/2000/svg';
-  const VB = 1000;
+  const headerEl = document.querySelector('header');
+  const legendEl = document.getElementById('legend');
   let svg;
+
+  // text metrics via an offscreen canvas — fast enough for 60 labels
+  const measure = (() => {
+    const mc = document.createElement('canvas').getContext('2d');
+    return (t, fs, wt) => { mc.font = `${wt || 500} ${fs}px system-ui, -apple-system, "Segoe UI", sans-serif`; return mc.measureText(t).width; };
+  })();
+  function wrap(text, fs, maxW) {
+    const lines = []; let cur = '';
+    for (const w of text.split(' ')) {
+      const t = cur ? cur + ' ' + w : w;
+      if (cur && measure(t, fs) > maxW) { lines.push(cur); cur = w; } else cur = t;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  // smallest circle that holds the wrapped label; picks the wrap that needs the least radius
+  function fitText(label, fs) {
+    const total = measure(label, fs), words = label.split(' ');
+    let best = null;
+    for (let k = 1; k <= Math.min(4, words.length); k++) {
+      const lines = wrap(label, fs, total / k * 1.12 + 2);
+      const w = Math.max(...lines.map(l => measure(l, fs)));
+      const h = lines.length * fs * 1.22;
+      const R = 0.5 * Math.sqrt(w * w + h * h);   // circle circumscribing the text box
+      if (!best || R < best.R) best = { R, lines };
+    }
+    return best;
+  }
+
+  const nMin = Math.min(...CL.map(c => c.n)), nMax = Math.max(...CL.map(c => c.n));
+
+  // size every bubble to fit its own label, then push overlaps apart inside the frame
+  function layout() {
+    const W = innerWidth, H = innerHeight;
+    const padT = headerEl.getBoundingClientRect().height + 14;
+    const lh = legendEl.getBoundingClientRect().height;
+    const padB = lh + (parseInt(getComputedStyle(legendEl).bottom) || 16) + 12;
+    const padX = W < 640 ? 14 : 48;
+    const left = padX, right = W - padX, top = padT, bottom = H - padB;
+    const availW = Math.max(140, right - left), availH = Math.max(140, bottom - top);
+
+    // seed from the embedding, using the whole area (a mild aspect stretch to fill the page)
+    for (const c of CL) { c.X = left + c.x * availW; c.Y = top + c.y * availH; }
+
+    // font scales gently with passage count; radius follows from the text that must fit inside
+    let need = 0;
+    for (const c of CL) {
+      const t = nMax > nMin ? (c.n - nMin) / (nMax - nMin) : 0.5;
+      c.fs = 11 + 3.2 * Math.sqrt(t);
+      need += Math.pow(fitText(c.label, c.fs).R + 12, 2);
+    }
+    // if everything can't fit, scale the fonts (and thus radii) down uniformly until it does
+    const g = Math.min(1, Math.sqrt(availW * availH * 0.48 / Math.PI / need));
+    for (const c of CL) {
+      c.fs *= g;
+      const ft = fitText(c.label, c.fs);
+      c._lines = ft.lines;
+      c.R = ft.R + Math.min(ft.R * 0.28, 9) + 6;   // room for the composition ring + padding
+    }
+
+    // relaxation — separate overlapping circles, clamp everyone inside the frame
+    for (let it = 0; it < 400; it++) {
+      let moved = 0;
+      for (let i = 0; i < CL.length; i++) {
+        const a = CL[i];
+        for (let j = i + 1; j < CL.length; j++) {
+          const b = CL[j];
+          let dx = b.X - a.X, dy = b.Y - a.Y, d = Math.hypot(dx, dy) || 0.01;
+          const min = a.R + b.R + 4;
+          if (d < min) {
+            const p = (min - d) / 2; dx /= d; dy /= d;
+            a.X -= dx * p; a.Y -= dy * p; b.X += dx * p; b.Y += dy * p; moved += p;
+          }
+        }
+      }
+      for (const c of CL) {
+        c.X = Math.max(left + c.R, Math.min(right - c.R, c.X));
+        c.Y = Math.max(top + c.R, Math.min(bottom - c.R, c.Y));
+      }
+      if (moved < 0.4) break;
+    }
+    return { W, H };
+  }
+
   function render() {
+    const box = layout();
     stage.innerHTML = '';
     svg = document.createElementNS(NS, 'svg');
-    // leave headroom for the header and legend
-    svg.setAttribute('viewBox', `-70 -80 ${VB + 140} ${VB + 230}`);
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.setAttribute('viewBox', `0 0 ${box.W} ${box.H}`);
     for (const c of CL) {
       const g = document.createElementNS(NS, 'g');
       g.setAttribute('class', 'bubble');
-      const x = c.x * VB, y = c.y * VB, r = Math.max(c.r * VB, 9);
+      const x = c.X, y = c.Y, r = c.R;
       const body = document.createElementNS(NS, 'circle');
       body.setAttribute('class', 'body');
       body.setAttribute('cx', x); body.setAttribute('cy', y); body.setAttribute('r', r);
@@ -250,34 +337,21 @@
         g.appendChild(seg);
         off += frac;
       });
-      // label: wrapped inside the big bubbles, a line beneath the middling ones
-      const inside = r > 38;
-      if (r > 17) {
-        const fs = inside ? Math.min(r / 3.6, 15) : 10.5;
-        const perLine = inside ? Math.max(Math.floor(r / (fs * 0.42)), 8) : 16;
-        const words = c.label.split(' ');
-        const lines = [''];
-        for (const w of words) {
-          const last = lines[lines.length - 1];
-          if (last && (last + ' ' + w).length > perLine) lines.push(w);
-          else lines[lines.length - 1] = (last + ' ' + w).trim();
-        }
-        const text = document.createElementNS(NS, 'text');
-        text.setAttribute('x', x); text.setAttribute('text-anchor', 'middle');
-        text.setAttribute('font-size', fs);
-        const y0 = inside ? y - ((lines.length - 1) / 2) * fs * 1.18
-                          : y + r + fs + 3;
-        lines.forEach((ln, li) => {
-          const ts = document.createElementNS(NS, 'tspan');
-          ts.setAttribute('x', x);
-          ts.setAttribute('y', y0 + li * fs * 1.18);
-          ts.setAttribute('dominant-baseline', 'central');
-          ts.textContent = ln;
-          text.appendChild(ts);
-        });
-        g.appendChild(text);
-      }
-      g.addEventListener('pointerenter', e => showTip(c, e));
+      // label — wrapped and centred inside the bubble
+      const fs = c.fs, lines = c._lines, th = lines.length * fs * 1.22;
+      const text = document.createElementNS(NS, 'text');
+      text.setAttribute('class', 'lbl in');
+      text.setAttribute('x', x); text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', fs);
+      lines.forEach((ln, li) => {
+        const ts = document.createElementNS(NS, 'tspan');
+        ts.setAttribute('x', x);
+        ts.setAttribute('y', y - th / 2 + (li + 0.78) * fs * 1.22);
+        ts.textContent = ln;
+        text.appendChild(ts);
+      });
+      g.appendChild(text);
+      g.addEventListener('pointerenter', e => { svg.appendChild(g); showTip(c, e); });
       g.addEventListener('pointermove', e => showTip(c, e));
       g.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
       g.addEventListener('click', () => select(c.id));
@@ -288,6 +362,8 @@
     applyFilter();
     if (selected >= 0) CL[selected]._g.classList.add('sel');
   }
+  let rAf;
+  addEventListener('resize', () => { cancelAnimationFrame(rAf); rAf = requestAnimationFrame(render); });
 
   function showTip(c, e) {
     const tops = c.counts.map((n, i) => [n, i]).filter(a => a[0]).sort((a, b) => b[0] - a[0]);
