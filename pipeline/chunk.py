@@ -26,10 +26,11 @@ def load(pgid: int) -> str:
 def clean(s: str) -> str:
     s = re.sub(r"\[.*?\]", "", s, flags=re.S)  # editorial notes / footnote refs
     s = re.sub(r"\(\d+\)", "", s)
-    s = s.replace("_", "")                     # Gutenberg italics markers
+    s = s.replace("_", "").replace("=", "")    # Gutenberg italics / bold markers
     s = re.sub(r"&c\.?", "etc.", s)
     s = re.sub(r"\s*(--|——)\s*", " — ", s)
     s = re.sub(r"\s+", " ", s).strip()
+    s = re.sub(r"\s+([,.;:!?])", r"\1", s)     # drop space before punctuation
     return s
 
 
@@ -319,10 +320,105 @@ def epicurus(records):
         emit(records, "Epicureanism", "Principal Doctrines", f"#{mm.group(1)}", text)
 
 
+# --- Zhuangzi (Giles, "Chuang Tzu"). "CHAPTER I." then an all-caps subtitle and
+# an "_Argument_:" precis (both skipped); the remainder is prose. ---
+def zhuangzi(records):
+    body = load(59709)
+    heads = list(re.finditer(r"^CHAPTER ([IVXLC]+)\.\s*$", body, re.M))
+    # keep only the Inner Chapters (I-VII) — the authentic core; the Outer and
+    # Miscellaneous chapters are later accretions and would swamp the corpus.
+    inner = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7}
+    for h, nxt in zip(heads, heads[1:] + [None]):
+        num = h.group(1)
+        if num not in inner:
+            continue
+        section = body[h.end() : nxt.start() if nxt else len(body)]
+        buf = ""
+        for para in re.split(r"\n\s*\n", section):
+            p = " ".join(para.split())
+            if not p or p == p.upper():          # skip the all-caps subtitle
+                continue
+            if re.match(r"_?Argument_?", p):      # skip the chapter precis
+                continue
+            buf = f"{buf} {p}".strip()
+            if len(buf) >= 500:
+                emit(records, "Taoism", "Zhuangzi", f"ch. {num}", buf)
+                buf = ""
+        if buf:
+            emit(records, "Taoism", "Zhuangzi", f"ch. {num}", buf)
+
+
+# --- Mencius ("Sayings of Mencius", Giles, in the Chinese Literature anthology).
+# BOOK I..VII, each with an all-caps honorific title and Part I/II, then dialogue
+# paragraphs. The selection ends where "THE SHI-KING" begins. ---
+def mencius(records):
+    body = load(10056)
+    i = body.rfind("THE SAYINGS OF MEN")
+    section = body[i : body.index("THE SHI-KING", i)]
+    book, part = None, ""
+    buf, ref = "", None
+
+    def flush():
+        if buf and ref:
+            emit(records, "Confucianism", "Mencius", ref, buf)
+
+    for para in re.split(r"\n\s*\n", section):
+        p = " ".join(para.split())
+        if not p:
+            continue
+        bm = re.match(r"BOOK ([IVXL]+)$", p)
+        pm = re.match(r"Part ([IVX]+)$", p, re.I)
+        if bm:
+            flush(); book, buf, ref = bm.group(1), "", None; continue
+        if pm:
+            flush(); part, buf, ref = pm.group(1), "", None; continue
+        if p == p.upper() and len(p) < 40:        # book's honorific title line
+            continue
+        ref = f"{book}.{part}" if part else f"{book}"
+        buf = f"{buf} {p}".strip()
+        if len(buf) >= 450:
+            flush(); buf = ""
+    flush()
+
+
+# --- Pirkei Avot (Taylor, "Sayings of the Jewish Fathers"). CHAPTER I..VI, each
+# saying at col-0 "N. ..."; indented blocks below a saying are footnotes. ---
+def pirkei_avot(records):
+    body = load(8547)
+    start = body.index("CHAPTER I", body.index("Moses received") - 400)
+    region = body[start:]
+    end = re.search(r"^\s*(NOTES|APPENDIX|ABBREVIATIONS|INDEX|Transcriber)", region, re.M)
+    if end:
+        region = region[: end.start()]
+    chaps = list(re.finditer(r"^CHAPTER ([IVX]+)\s*$", region, re.M))
+    for h, nxt in zip(chaps, chaps[1:] + [None]):
+        num = h.group(1)
+        chtext = region[h.end() : nxt.start() if nxt else len(region)]
+        parts = re.split(r"(?m)^(\d+)\.\s", chtext)
+        for sid, seg in zip(parts[1::2], parts[2::2]):
+            cut = re.search(r"\n[ \t]+\S", seg)   # first indented line = footnotes
+            saying = " ".join((seg[: cut.start()] if cut else seg).split())
+            emit(records, "Hebrew wisdom", "Pirkei Avot", f"{num}:{sid}", saying)
+
+
+# --- Rumi ("The Persian Mystics", Davis/Whinfield renderings). After the prose
+# introduction, a run of titled poems; each all-caps title (col 0) starts one. ---
+def rumi(records):
+    body = load(45159)
+    start = body.index("A CRY TO THE BELOVED")
+    region = body[start : body.index("APPENDIX", start)]
+    # titles are centre-indented and fully upper-case, one per line
+    heads = list(re.finditer(r"^[ \t]*([A-Z][A-Z ,'’\-]{3,75})[ \t]*$", region, re.M))
+    for h, nxt in zip(heads, heads[1:] + [None]):
+        title = " ".join(h.group(1).split()).title()
+        text = " ".join(region[h.end() : nxt.start() if nxt else len(region)].split())
+        emit(records, "Islam", "Rumi", title, text)
+
+
 def main():
     records = []
     for fn in (tao, dhammapada, meditations, enchiridion, kjv, gita, analects,
-               quran, upanishads, epicurus):
+               quran, upanishads, epicurus, zhuangzi, mencius, pirkei_avot, rumi):
         before = len(records)
         fn(records)
         src = records[-1]["source"] if len(records) > before else fn.__name__
