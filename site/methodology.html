@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wisdom Map — How It's Made</title>
+<style>
+  :root {
+    --surface: #fcfcfb;
+    --page: #f9f9f7;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --panel: #ffffff;
+    --c0: #2a78d6; --c1: #008300; --c2: #eda100;
+    --c3: #4a3aa7; --c4: #1baf7a; --c5: #e34948; --c6: #0e93a8;
+    --c7: #a06a1e; --c8: #e87ba4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: #1a1a19;
+      --page: #0d0d0d;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --hairline: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+      --panel: #222221;
+      --c0: #3987e5; --c1: #008300; --c2: #c98500;
+      --c3: #9085e9; --c4: #199e70; --c5: #e66767; --c6: #1490a5;
+      --c7: #b07b2e; --c8: #d55181;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--ink);
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 20px 80px; }
+  header { display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: baseline; margin-bottom: 6px; }
+  h1 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
+  header a { color: var(--ink-2); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--border); }
+  .sub { color: var(--ink-2); font-size: 13px; max-width: 68ch; margin-bottom: 8px; }
+  h2 { font-size: 21px; font-weight: 650; letter-spacing: -0.01em; margin: 52px 0 4px; }
+  h2 .n { color: var(--muted); font-weight: 500; margin-right: 8px; }
+  h3 { font-size: 15.5px; font-weight: 650; margin: 30px 0 4px; }
+  p { max-width: 74ch; margin: 10px 0; color: var(--ink-2); }
+  p b, li b { color: var(--ink); font-weight: 600; }
+  ul { max-width: 74ch; margin: 10px 0; padding-left: 22px; color: var(--ink-2); }
+  li { margin: 5px 0; }
+  code {
+    font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+    border-radius: 5px; padding: 1px 5px;
+  }
+  .fig {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 16px 8px; margin: 18px 0 6px; overflow-x: auto;
+  }
+  .fig .mermaid { display: flex; justify-content: safe center; min-width: 320px; }
+  .cap { color: var(--muted); font-size: 12.5px; max-width: 74ch; margin: 6px 2px 0; }
+  .example {
+    border-left: 3px solid var(--c0); border-radius: 0 10px 10px 0;
+    background: color-mix(in srgb, var(--ink) 4%, transparent);
+    padding: 12px 16px; margin: 14px 0; max-width: 72ch; font-size: 14px; color: var(--ink-2);
+  }
+  .example b { color: var(--ink); }
+  table { border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+  th, td { text-align: left; padding: 7px 14px 7px 0; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  td code { white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 4px; }
+  .toc a {
+    padding: 4px 12px; border-radius: 999px; font-size: 13px; text-decoration: none;
+    background: var(--panel); border: 1px solid var(--border); color: var(--ink-2);
+  }
+  .toc a:hover { color: var(--ink); border-color: var(--ink-2); }
+  #foot { color: var(--muted); font-size: 11.5px; max-width: 68ch; margin-top: 56px; line-height: 1.55;
+          border-top: 1px solid var(--hairline); padding-top: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>How It's Made</h1>
+    <a href="./">← the map</a>
+    <a href="ideas.html">the ideas →</a>
+    <a href="affinities.html">the affinities →</a>
+    <a href="distinctives.html">the distinctives →</a>
+    <a href="lineage.html">the lineage →</a>
+  </header>
+  <div class="sub">The complete methodology: where the data comes from, what the models do
+    to it, and exactly what each view computes. Nothing here is hand-waved — every number on
+    the site traces back to a step on this page.</div>
+
+  <div class="toc">
+    <a href="#big-picture">the big picture</a>
+    <a href="#corpus">1 · corpus</a>
+    <a href="#distill">2 · distillation</a>
+    <a href="#embed">3 · embedding</a>
+    <a href="#project">4 · projection</a>
+    <a href="#views">the five pages</a>
+    <a href="#dictionary">data dictionary</a>
+    <a href="#honesty">caveats &amp; costs</a>
+  </div>
+
+  <h2 id="big-picture">The big picture</h2>
+  <p>One mental model carries the whole site: <b>everything is a different projection of the
+  same two objects</b> — a table of 3,635 passages and a matrix of 3,635 "meaning vectors"
+  (one embedding per passage). The pipeline below runs once, on a laptop; the site itself is
+  static files. Two of the five pages don't even ship precomputed answers — the affinities
+  and distinctives pages compute their statistics <em>in your browser, at load time</em>,
+  from the same JSON the map uses.</p>
+
+  <div class="fig"><pre class="mermaid">
+flowchart TB
+  subgraph PIPE["  One-time pipeline · runs locally, results committed  "]
+    direction TB
+    RAW["18 public-domain texts&lt;br/&gt;Project Gutenberg"]:::file
+    CHUNK["chunk.py&lt;br/&gt;split into passages"]:::step
+    PASS["passages.json&lt;br/&gt;3,635 rows · 9 traditions"]:::file
+    DIST["distill.py · Haiku LLM 💲&lt;br/&gt;one plain-English gist per passage"]:::llm
+    GIST["gists.json&lt;br/&gt;cached by text hash"]:::file
+    EMB["embed_project.py · bge-large&lt;br/&gt;0.65 gist + 0.35 text → 1,024-d vector"]:::step
+    VEC["meaning vectors&lt;br/&gt;3,635 × 1,024"]:::file
+    UMAP["UMAP → 2-D positions&lt;br/&gt;cosine top-10 → neighbour lists"]:::step
+    IDEAS["ideas.py · k-means k=60&lt;br/&gt;+ Haiku cluster names 💲"]:::llm
+    SEARCH["embed_search.py · bge-small&lt;br/&gt;re-embed at 384-d, int8-quantise"]:::step
+    RAW --> CHUNK --> PASS --> DIST --> GIST
+    PASS --> EMB
+    GIST --> EMB
+    EMB --> VEC --> UMAP
+    VEC --> IDEAS
+    PASS --> SEARCH
+    GIST --> SEARCH
+  end
+  subgraph SHIP["  Static files · shipped with the site  "]
+    direction TB
+    DATA["data.json · 2.2 MB&lt;br/&gt;text, gist, x/y, neighbours"]:::file
+    IJSON["ideas.json · 33 kB&lt;br/&gt;60 named clusters"]:::file
+    BIN["search.bin · 1.4 MB&lt;br/&gt;int8 vectors + scales"]:::file
+  end
+  UMAP --> DATA
+  IDEAS --> IJSON
+  SEARCH --> BIN
+  subgraph BROWSE["  In your browser  "]
+    direction TB
+    MAP["THE MAP&lt;br/&gt;scatter + echo threads&lt;br/&gt;+ Ask the Ages search"]:::page
+    IDEASPG["THE IDEAS&lt;br/&gt;bubble map of clusters"]:::page
+    AFF["THE AFFINITIES&lt;br/&gt;computes 9×9 lift live"]:::page
+    DISPG["THE DISTINCTIVES&lt;br/&gt;computes purity × lift live"]:::page
+    LIN["THE LINEAGE&lt;br/&gt;hand-authored family tree&lt;br/&gt;(no pipeline at all)"]:::page
+  end
+  DATA --> MAP
+  DATA --> AFF
+  DATA --> DISPG
+  DATA --> IDEASPG
+  IJSON --> IDEASPG
+  IJSON --> DISPG
+  BIN --> MAP
+  classDef file fill:@FILEBG,stroke:@FILEBR,color:@INK,stroke-width:1.5px
+  classDef step fill:@STEPBG,stroke:@STEPBR,color:@INK
+  classDef llm fill:@LLMBG,stroke:@LLMBR,color:@INK,stroke-width:1.5px
+  classDef page fill:@PAGEBG,stroke:@PAGEBR,color:@INK,stroke-width:1.5px
+  </pre></div>
+  <div class="cap">Blue = data artifacts · amber = steps that call an LLM (the only two that
+  cost money) · green = the five pages. The lineage stands apart deliberately: it is written
+  by hand, not derived.</div>
+
+  <h2 id="corpus"><span class="n">1</span>The corpus — from books to passages</h2>
+  <p><code>pipeline/chunk.py</code> turns 18 Gutenberg texts into uniform rows. Each text has
+  its own parser (the Analects' numbered books, the Quran's suras, Proverbs' verses…), but
+  all of them emit the same record: <b>tradition · source · ref · text</b>. Three rules make
+  passages comparable:</p>
+  <ul>
+    <li><b>Max ~700 characters</b> — longer passages split at sentence boundaries, so one
+      dot never represents a whole chapter.</li>
+    <li><b>Min 60 characters</b> — fragments merge forward into the next passage.</li>
+    <li><b>Cleanup</b> — Gutenberg italics markers, editorial footnotes <code>[…]</code>,
+      "&amp;c.", and dash variants are normalised away so the models never see them.</li>
+  </ul>
+  <p>Result: <b>3,635 passages</b> across nine traditions — Stoicism 759, Hebrew wisdom 565,
+  Confucianism 528, Islam 421, Buddhism 414, Hinduism 399, Christianity 360, Taoism 122,
+  Epicureanism 67. These sizes matter later: every statistic on the affinities and
+  distinctives pages is normalised so big traditions can't win by volume alone.</p>
+
+  <h2 id="distill"><span class="n">2</span>The distillation — why an LLM is in the loop</h2>
+  <p>The first version of the map embedded raw text only, and it failed in an instructive
+  way: embeddings latched onto <em>vocabulary</em>, not ideas. Every "The Master said…"
+  clustered with every other one; "love/hate" passages grouped by the words themselves. So
+  every passage is first <b>distilled by Claude Haiku into one plain modern-English
+  sentence</b> — the claim, stripped of speaker framing, archaic wording, and metaphor:</p>
+  <div class="example">
+    <b>Matthew 6:24</b> — "No man can serve two masters: for either he will hate the one,
+    and love the other…"<br/>
+    <b>→ gist:</b> "You can't serve both God and money equally; choose one as your primary
+    loyalty."
+  </div>
+  <p>Mechanics: batches of 60 passages per <code>claude -p</code> call, 4 parallel workers,
+  every call's cost read from the CLI's JSON output and summed, a probe batch first, and a
+  hard $5 budget stop. Gists are cached in <code>gists.json</code> keyed by a hash of the
+  passage text, so re-runs only pay for new passages. Total spent on all distillation to
+  date: <b>$4.08</b>.</p>
+
+  <h2 id="embed"><span class="n">3</span>The embedding — one meaning vector per passage</h2>
+  <p>Both the original text and the gist are embedded with
+  <code>BAAI/bge-large-en-v1.5</code> (1,024 dimensions), then blended. The gist dominates —
+  it carries the idea — but the original text keeps enough weight that imagery and register
+  still count for something:</p>
+  <div class="fig"><pre class="mermaid">
+flowchart LR
+  T["original passage&lt;br/&gt;“No man can serve two masters…”"]:::file --> ET["bge-large&lt;br/&gt;1,024-d vector"]:::step
+  G["Haiku gist&lt;br/&gt;“You can't serve both God and money…”"]:::file --> EG["bge-large&lt;br/&gt;1,024-d vector"]:::step
+  ET --> B["blend&lt;br/&gt;0.35 × text + 0.65 × gist"]:::step
+  EG --> B
+  B --> V["renormalise to length 1&lt;br/&gt;= the passage's meaning vector"]:::file
+  classDef file fill:@FILEBG,stroke:@FILEBR,color:@INK,stroke-width:1.5px
+  classDef step fill:@STEPBG,stroke:@STEPBR,color:@INK
+  </pre></div>
+  <div class="cap">Vectors are unit length, so "similarity" everywhere on this site is the
+  cosine of the angle between two vectors — computed as a plain dot product.</div>
+  <p>Embeddings are cached as <code>.npy</code> files keyed by a hash of model + input, so
+  every later stage (ideas, search) reuses them for free. The map, the ideas clustering, and
+  the neighbour lists all sit on <b>this same matrix</b> — that's what makes the views
+  mutually consistent.</p>
+
+  <h2 id="project"><span class="n">4</span>The projection — positions, neighbours, resonance</h2>
+  <p><code>embed_project.py</code> derives the three things <code>data.json</code> ships per
+  passage:</p>
+  <ul>
+    <li><b>x, y</b> — UMAP squeezes 1,024 dimensions to 2 (cosine metric,
+      <code>n_neighbors=25</code>, <code>min_dist=0.08</code>, fixed seed). Distances on the
+      map are <em>suggestive, not exact</em> — UMAP preserves neighbourhoods, not global
+      geometry. That's why the precise statistics below never use x/y.</li>
+    <li><b>nb</b> — the passage's <b>top-10 cosine neighbours</b> with scores, computed in
+      the full 1,024-d space. These are the threads the map draws, and the <em>only</em>
+      input the affinities page needs.</li>
+    <li><b>r (resonance)</b> — how many <em>other</em> traditions appear among those 10
+      neighbours: 0 = the passage is an <em>island</em> (speaks only to its own tradition),
+      8 = nearly everyone echoes it.</li>
+  </ul>
+
+  <h2 id="views">The five pages — what each one actually computes</h2>
+
+  <h3>The map (<code>index.html</code>)</h3>
+  <p>The most direct view: every passage drawn at its UMAP position, coloured by tradition.
+  Click a dot → the panel shows its text, gist, resonance, and its <code>nb</code> list split
+  into "echoes in other traditions" vs "within its own". No further math happens on this
+  page — it renders stage 4 as-is.</p>
+
+  <h3>Ask the Ages (the search box on the map)</h3>
+  <p>The problem: the corpus lives in bge-large's 1,024-d space, but a 1.3 GB model can't run
+  in a visitor's browser, and a query embedded by a <em>different</em> model lands in a
+  different space where cosine is meaningless. The fix is a <b>second, smaller space used
+  only for search</b>:</p>
+  <div class="fig"><pre class="mermaid">
+flowchart TB
+  subgraph P["  Pipeline time · once, locally  "]
+    direction LR
+    C["all 3,635 passages&lt;br/&gt;same 0.65 / 0.35 gist blend"]:::file --> S1["bge-small-en-v1.5&lt;br/&gt;384-d, full precision"]:::step
+    S1 --> Q8["int8 quantise&lt;br/&gt;one scale per vector"]:::step --> BINF["search.bin · 1.4 MB&lt;br/&gt;ships with the site"]:::file
+  end
+  subgraph B["  Visit time · in your browser  "]
+    direction LR
+    QY["your question&lt;br/&gt;“I'm afraid of dying”"]:::file --> PFX["add bge's query prefix&lt;br/&gt;“Represent this sentence…”"]:::step
+    PFX --> S2["the same bge-small&lt;br/&gt;via transformers.js · 34 MB ONNX,&lt;br/&gt;downloaded once behind a consent prompt"]:::step
+    S2 --> DOT["dot product against all&lt;br/&gt;3,635 vectors ≈ instant"]:::step --> TOP["top 20 passages&lt;br/&gt;halos on the map,&lt;br/&gt;panel grouped by tradition"]:::page
+  end
+  BINF -.-> DOT
+  classDef file fill:@FILEBG,stroke:@FILEBR,color:@INK,stroke-width:1.5px
+  classDef step fill:@STEPBG,stroke:@STEPBR,color:@INK
+  classDef page fill:@PAGEBG,stroke:@PAGEBR,color:@INK,stroke-width:1.5px
+  </pre></div>
+  <div class="cap">Same model on both sides = same space. Verified: the browser path
+  reproduces the Python pipeline's rankings with scores within ±0.004 (the tiny gap is int8
+  quantisation + the q8 ONNX build). $0 per query, no server, no query leaves the page.</div>
+  <p>Two honest costs of this design: search quality is bge-small's, slightly below the
+  map's bge-large (only search is affected), and the model download is the site's one
+  external request — hence the consent prompt.</p>
+
+  <h3>The ideas (<code>ideas.html</code>)</h3>
+  <p><code>ideas.py</code> runs k-means (k=60, fixed seed) over the same meaning vectors.
+  Each cluster becomes a bubble:</p>
+  <div class="fig"><pre class="mermaid">
+flowchart LR
+  V["meaning vectors&lt;br/&gt;3,635 × 1,024"]:::file --> KM["k-means&lt;br/&gt;k = 60"]:::step
+  KM --> CL["60 clusters&lt;br/&gt;passages sorted by&lt;br/&gt;closeness to centroid"]:::file
+  CL --> CO["per-tradition counts&lt;br/&gt;→ ring segments +&lt;br/&gt;spread score eff"]:::step
+  CL --> LB["12 sample gists per cluster&lt;br/&gt;→ Haiku names it 💲&lt;br/&gt;cached by sample hash"]:::llm
+  CL --> LY["bubble layout: area ∝ passages,&lt;br/&gt;seeded at the cluster's mean map&lt;br/&gt;position, overlaps relaxed apart"]:::step
+  CO --> PG["THE IDEAS page"]:::page
+  LB --> PG
+  LY --> PG
+  classDef file fill:@FILEBG,stroke:@FILEBR,color:@INK,stroke-width:1.5px
+  classDef step fill:@STEPBG,stroke:@STEPBR,color:@INK
+  classDef llm fill:@LLMBG,stroke:@LLMBR,color:@INK,stroke-width:1.5px
+  classDef page fill:@PAGEBG,stroke:@PAGEBR,color:@INK,stroke-width:1.5px
+  </pre></div>
+  <p>The "most shared" ranking uses <b>eff — the effective number of traditions</b>:
+  exp(entropy) of the cluster's tradition shares. Intuition: a cluster split 50/50 between
+  two traditions scores exactly 2.0; spread evenly across all nine it would score 9.0; one
+  passage from an eighth tradition barely moves it. It measures <em>even spread</em>, not
+  just presence.</p>
+  <div class="example">
+    <b>"Detachment from desire liberates"</b> — 37 passages: 30 Buddhist, 4 Stoic, 2 Hindu,
+    1 Epicurean. Touches four traditions, but Buddhism dominates → eff = 1.95, honestly
+    closer to "one and a bit traditions" than four.
+  </div>
+
+  <h3>The affinities (<code>affinities.html</code>)</h3>
+  <p>Computed in your browser from the neighbour lists, in about a millisecond. The question:
+  when a passage from tradition A looks at its 10 nearest neighbours, how often does it see
+  tradition B — <b>compared to what chance would predict from B's size alone?</b></p>
+  <div class="fig"><pre class="mermaid">
+flowchart LR
+  A["Christianity's 360 passages&lt;br/&gt;× 10 neighbour slots&lt;br/&gt;= 3,600 looks outward"]:::file --> O["observed:&lt;br/&gt;750 land on Islam"]:::step
+  N["Islam is 421 of 3,634&lt;br/&gt;other passages ≈ 11.6%"]:::file --> E["expected by chance:&lt;br/&gt;3,600 × 11.6% ≈ 417"]:::step
+  O --> L["lift = 750 / 417 = 1.80"]:::page
+  E --> L
+  L --> SYM["symmetrised cell =&lt;br/&gt;mean of both directions&lt;br/&gt;(1.80 + 0.65) / 2 = 1.23"]:::page
+  classDef file fill:@FILEBG,stroke:@FILEBR,color:@INK,stroke-width:1.5px
+  classDef step fill:@STEPBG,stroke:@STEPBR,color:@INK
+  classDef page fill:@PAGEBG,stroke:@PAGEBR,color:@INK,stroke-width:1.5px
+  </pre></div>
+  <div class="cap">A real worked example — the strongest cell in the matrix. Note the
+  asymmetry the mean hides (hover any cell to see it): Christian passages reach toward the
+  Quran far more (1.80) than Quranic passages reach back (0.65) — consistent with Islam's
+  42% island share below.</div>
+  <p>Lift 1.0 = exactly chance. The normalisation is the whole point: without it, 759-passage
+  Stoicism would dominate every row simply by being everywhere. The quiet headline is that
+  the four historically linked pairs — Christianity↔Islam, Buddhism↔Hinduism,
+  Epicureanism↔Stoicism, Confucianism↔Taoism — are precisely the four cells above 1.0.
+  Nothing in the pipeline knows any history; the lineages re-emerge from meaning alone.</p>
+  <p>Clicking a cell ranks the actual passage pairs behind the number (every A-passage's
+  neighbour links into B, deduplicated, sorted by cosine) — so the summary statistic is
+  always one click from its raw evidence.</p>
+
+  <h3>The distinctives (<code>distinctives.html</code>)</h3>
+  <p>The inverse question: which clusters does one tradition dominate <em>beyond its size</em>?
+  Also computed at page load. For each tradition T and cluster c (where T has ≥ 3 passages):</p>
+  <ul>
+    <li><b>purity</b> = T's share of the cluster ("30 of 37 passages").</li>
+    <li><b>lift</b> = purity ÷ T's share of the whole corpus, so small voices can rank.</li>
+    <li>ideas are ranked by <b>purity × lift</b>; deliberately <em>no</em> hard purity
+      cut-off — at k=60 Taoism's best cluster is only 26% pure (it's 3% of the corpus, so
+      that's still 7.7× its share) and a 70% bar would erase the small traditions
+      entirely. Instead the purity is printed plainly on every row.</li>
+    <li>each card also shows the <b>island share</b> — the % of passages with resonance 0.
+      It spans a striking range: Epicureanism 0%, Islam 42%.</li>
+  </ul>
+
+  <h3>The lineage (<code>lineage.html</code>)</h3>
+  <p>The odd one out, on purpose. It is <b>not derived from embeddings at all</b>: ~30 major
+  scriptures placed left-to-right by date, coloured by language family, with descent and
+  influence edges — every node, edge, date, and "what flows along this edge" note written and
+  sourced by hand (each node links a reference). It answers the historical question the other
+  views deliberately ignore: the map shows <em>that</em> traditions converge; the lineage
+  shows <em>which of those convergences have a family explanation</em> — and, by elimination,
+  which ones are the genuinely independent arrivals.</p>
+
+  <h2 id="dictionary">Data dictionary</h2>
+  <h3><code>data.json</code> — one record per passage</h3>
+  <table>
+    <tr><th>field</th><th>meaning</th><th>produced by</th></tr>
+    <tr><td><code>text</code></td><td>the passage, cleaned</td><td>chunk.py</td></tr>
+    <tr><td><code>t</code> / <code>s</code> / <code>ref</code></td><td>tradition index · source index · reference (e.g. "ch. 1")</td><td>chunk.py</td></tr>
+    <tr><td><code>g</code></td><td>the Haiku gist (absent if distillation returned the text unchanged)</td><td>distill.py</td></tr>
+    <tr><td><code>x</code>, <code>y</code></td><td>UMAP position, normalised to [0, 1]²</td><td>embed_project.py</td></tr>
+    <tr><td><code>nb</code></td><td>top-10 neighbours as <code>[passage id, cosine]</code> pairs, full 1,024-d space</td><td>embed_project.py</td></tr>
+    <tr><td><code>r</code></td><td>resonance: distinct <em>other</em> traditions among the 10 neighbours (0 = island)</td><td>embed_project.py</td></tr>
+  </table>
+  <h3><code>ideas.json</code> — one record per cluster</h3>
+  <table>
+    <tr><th>field</th><th>meaning</th><th>produced by</th></tr>
+    <tr><td><code>label</code>, <code>desc</code></td><td>3–5-word name + one-sentence idea</td><td>Haiku (cached)</td></tr>
+    <tr><td><code>n</code>, <code>counts</code></td><td>cluster size · passages per tradition (ring segments)</td><td>k-means</td></tr>
+    <tr><td><code>eff</code></td><td>effective number of traditions, exp(entropy of shares)</td><td>ideas.py</td></tr>
+    <tr><td><code>ids</code></td><td>member passage ids, sorted by closeness to the centroid</td><td>ideas.py</td></tr>
+    <tr><td><code>x</code>, <code>y</code>, <code>r</code></td><td>bubble position (relaxed) and radius, unit square</td><td>ideas.py</td></tr>
+  </table>
+  <h3><code>search.bin</code> — the search matrix (little-endian)</h3>
+  <table>
+    <tr><th>bytes</th><th>content</th></tr>
+    <tr><td class="num">0–3</td><td>magic <code>"WMS1"</code></td></tr>
+    <tr><td class="num">4–11</td><td>uint32 N = 3,635 · uint32 D = 384</td></tr>
+    <tr><td class="num">12 …</td><td>N × float32 dequantisation scales</td></tr>
+    <tr><td class="num">then</td><td>N × D int8 vectors, row-major (vector = int8 × scale)</td></tr>
+  </table>
+
+  <h2 id="honesty">Caveats &amp; costs</h2>
+  <ul>
+    <li><b>Everything is corpus-relative.</b> "Distinctly Hindu" means "rare in the other
+      eight text selections here", not "absent from human thought". The Christianity sample
+      is the New Testament's teaching chapters, which likely tilts its affinities toward
+      Hebrew wisdom.</li>
+    <li><b>Two AI layers sit between you and the text</b>: the gists (which steer the
+      embeddings) and the cluster names. Both are always shown next to the original passage,
+      never instead of it.</li>
+    <li><b>Reproducible by construction</b>: fixed random seeds, content-hash caches, and
+      the map's x/y reused by the ideas layout, so re-runs don't shuffle the site.</li>
+    <li><b>Total LLM spend: $4.23</b> (distillation $4.08, cluster naming $0.15). The
+      embeddings, projections, affinities, distinctives, and every search query: $0.</li>
+    <li>An interpretive curiosity, not a theological claim.</li>
+  </ul>
+
+  <div id="foot">Diagrams render with mermaid.js from a CDN — the one thing on this page that
+  needs the network. Sources: pipeline/*.py and site/*.html in the repo; every figure above is
+  reproducible from them.</div>
+</main>
+
+<script type="module">
+  const dark = matchMedia('(prefers-color-scheme: dark)');
+  const blocks = [...document.querySelectorAll('.mermaid')];
+  const defs = blocks.map(el => el.textContent);
+
+  const TOKENS = {
+    light: {
+      '@FILEBG': '#e8f0fc', '@FILEBR': '#2a78d6',
+      '@STEPBG': '#ffffff', '@STEPBR': '#b9b8b0',
+      '@LLMBG':  '#fdf3d7', '@LLMBR':  '#a06a1e',
+      '@PAGEBG': '#e6f4ea', '@PAGEBR': '#008300',
+      '@INK':    '#0b0b0b',
+    },
+    dark: {
+      '@FILEBG': '#16283f', '@FILEBR': '#3987e5',
+      '@STEPBG': '#222221', '@STEPBR': '#52514e',
+      '@LLMBG':  '#332a12', '@LLMBR':  '#b07b2e',
+      '@PAGEBG': '#142a14', '@PAGEBR': '#1f9e1f',
+      '@INK':    '#ffffff',
+    },
+  };
+
+  let mermaid;
+  async function render() {
+    if (!mermaid) mermaid = (await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs')).default;
+    const mode = dark.matches ? 'dark' : 'light';
+    const tok = TOKENS[mode];
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      themeVariables: {
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+        fontSize: '15px',
+        primaryColor: tok['@STEPBG'],
+        primaryTextColor: tok['@INK'],
+        primaryBorderColor: tok['@STEPBR'],
+        lineColor: '#898781',
+        clusterBkg: mode === 'dark' ? '#161615' : '#f4f4f1',
+        clusterBorder: mode === 'dark' ? '#2c2c2a' : '#e1e0d9',
+        edgeLabelBackground: mode === 'dark' ? '#0d0d0d' : '#f9f9f7',
+      },
+      flowchart: { nodeSpacing: 42, rankSpacing: 52, padding: 10, htmlLabels: true, useMaxWidth: true },
+    });
+    blocks.forEach((el, i) => {
+      el.removeAttribute('data-processed');
+      el.textContent = defs[i].replace(/@[A-Z]+/g, m => tok[m] || m);
+    });
+    await mermaid.run({ nodes: blocks });
+  }
+  dark.addEventListener('change', render);
+  render();
+</script>
+</body>
+</html>
