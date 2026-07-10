@@ -90,6 +90,7 @@
     <h1>How It's Made</h1>
     <a href="./">← the map</a>
     <a href="ideas.html">the ideas →</a>
+    <a href="most-shared.html">most shared →</a>
     <a href="affinities.html">the affinities →</a>
     <a href="distinctives.html">the distinctives →</a>
     <a href="lineage.html">the lineage →</a>
@@ -199,29 +200,36 @@ flowchart TB
   <code>chunk.py</code>:</p>
   <table>
     <tr><th>tradition</th><th>source text(s) · edition · id</th><th>era</th><th class="num">passages</th></tr>
-    <tr><td>Stoicism</td><td>Marcus Aurelius, <i>Meditations</i> (Long tr., Gutenberg #2680) · Epictetus, <i>Enchiridion</i> (#45109)</td><td>2nd c. CE</td><td class="num">759</td></tr>
+    <tr><td>Stoicism</td><td>Marcus Aurelius, <i>Meditations</i> (Casaubon tr., Gutenberg #2680) · Epictetus, <i>Enchiridion</i> (Higginson tr., #45109)</td><td>2nd c. CE</td><td class="num">759</td></tr>
     <tr><td>Hebrew wisdom</td><td><i>Proverbs</i> + <i>Ecclesiastes</i> (KJV #10) · <i>Pirkei Avot</i>, "Ethics of the Fathers" (#8547)</td><td>~5th c. BCE – 2nd c. CE</td><td class="num">685</td></tr>
     <tr><td>Confucianism</td><td><i>Analects</i> (Legge tr., #3330) · <i>Mencius</i> (#10056)</td><td>~5th–3rd c. BCE</td><td class="num">578</td></tr>
     <tr><td>Islam</td><td><i>Qur'an</i> (Rodwell tr., #3434) · Rumi, <i>Masnavi</i> (#45159)</td><td>7th c. · 13th c. CE</td><td class="num">518</td></tr>
-    <tr><td>Buddhism</td><td><i>Dhammapada</i> (Pāli canon, #2017)</td><td>~3rd c. BCE</td><td class="num">414</td></tr>
+    <tr><td>Buddhism</td><td><i>Dhammapada</i> (Müller tr., Pāli canon, #2017) · <i>Diamond Sutra</i> (Gemmell tr., Mahāyāna, #64623)</td><td>~3rd c. BCE · ~2nd–4th c. CE</td><td class="num">497</td></tr>
     <tr><td>Hinduism</td><td><i>Bhagavad Gita</i> (#2388) · <i>Upanishads</i> (#3283)</td><td>~8th–2nd c. BCE</td><td class="num">399</td></tr>
     <tr><td>Taoism</td><td><i>Zhuangzi</i>, Inner Chapters (#59709) · <i>Tao Te Ching</i> (#216)</td><td>~4th c. BCE</td><td class="num">361</td></tr>
     <tr><td>Christianity</td><td>New Testament teaching chapters — Matthew, Luke, John, Romans, 1&nbsp;Corinthians, James (KJV #10)</td><td>1st c. CE</td><td class="num">360</td></tr>
     <tr><td>Zoroastrianism</td><td><i>Gāthās</i> (Mills tr., Sacred Books of the East vol. 31 — archive.org OCR scan)</td><td>~2nd millennium BCE</td><td class="num">239</td></tr>
+    <tr><td>Jainism</td><td><i>Uttarādhyayana Sūtra</i> (Jacobi tr., Sacred Books of the East vol. 45 — archive.org OCR scan)</td><td>~5th c. BCE – 5th c. CE</td><td class="num">199</td></tr>
+    <tr><td>Bahá'í</td><td>ʻAbdu'l-Bahá, <i>Tablets of ʻAbdu'l-Bahá</i> (#19312)</td><td>late 19th – early 20th c. CE</td><td class="num">175</td></tr>
+    <tr><td>Sikhism</td><td><i>Ādi Granth</i>, in Macauliffe, <i>The Sikh Religion</i> vol. 1 (archive.org OCR scan)</td><td>16th–17th c. CE</td><td class="num">144</td></tr>
     <tr><td>Epicureanism</td><td>Epicurus, <i>Letter to Menoeceus</i> + <i>Principal Doctrines</i> (#57342)</td><td>~3rd c. BCE</td><td class="num">67</td></tr>
+    <tr><td>Mesopotamia</td><td>Babylonian &amp; Assyrian hymns &amp; psalms, in <i>Babylonian &amp; Assyrian Literature</i> (Wilson ed., 1901 — archive.org OCR scan)</td><td>~2000–600 BCE</td><td class="num">59</td></tr>
+    <tr><td>Ancient Egypt</td><td><i>Instruction of Ptah-hotep</i> + <i>Ke'gemni</i> (Gunn tr., #30508)</td><td>~2400 BCE</td><td class="num">57</td></tr>
   </table>
   <div class="cap"><code>#nnnn</code> = Project Gutenberg book id (clean plain text). One book, KJV #10,
-  supplies both the Hebrew-wisdom books and the Christian teaching chapters. The Gāthās are the
-  only non-Gutenberg source — an OCR scan, hence the extra extraction step above.</div>
+  supplies both the Hebrew-wisdom books and the Christian teaching chapters. Four sources are
+  not from Gutenberg — the Gāthās, the Uttarādhyayana, the Ādi Granth and the Babylonian hymns
+  are archive.org OCR scans, hence the extra extraction step above.</div>
 
   <h3>Licensing — why every source is free to use</h3>
   <p>The corpus is built <b>entirely from public-domain material</b>, and deliberately so: the
-  underlying scriptures are ancient, and each specific <em>translation</em> here is a 19th- or
-  early-20th-century edition whose copyright has long since lapsed (their translators — James
-  Legge, J.&nbsp;M. Rodwell, George Long, L.&nbsp;H. Mills and their contemporaries — all died a
-  century or more ago, so the texts are public domain under both the US pre-1929 rule and the
-  life-plus-70 rule most of the world uses). Nothing here relies on a modern copyrighted
-  translation.</p>
+  underlying scriptures are ancient, and each specific <em>translation</em> here is a
+  public-domain edition — most from the 19th or early 20th century, a few older still (Meric
+  Casaubon's <i>Meditations</i> dates to 1634) — whose copyright has long since lapsed (their
+  translators — James Legge, J.&nbsp;M. Rodwell, Meric Casaubon, L.&nbsp;H. Mills and their
+  contemporaries — all died a century or more ago, so the texts are public domain under both the
+  US pre-1929 rule and the life-plus-70 rule most of the world uses). Nothing here relies on a
+  modern copyrighted translation.</p>
   <p>Two practical notes on how that public-domain status flows through the pipeline:</p>
   <ul>
     <li><b>Project Gutenberg.</b> A Gutenberg file is public-domain text wrapped in a trademark
@@ -229,9 +237,11 @@ flowchart TB
       its header/footer boilerplate, not the transcribed work itself. <code>chunk.py</code> strips
       that boilerplate and keeps only the bare public-domain text, so nothing on this site carries
       the Gutenberg trademark or its terms.</li>
-    <li><b>The archive.org Gāthās.</b> A faithful reproduction of a public-domain book adds no new
-      copyright, so the scanned <i>Sacred Books of the East</i> vol.&nbsp;31 (Mills, 1887) is as
-      free to use as any Gutenberg text — the OCR step just cleans it, it doesn't relicense it.</li>
+    <li><b>The archive.org scans.</b> A faithful reproduction of a public-domain book adds no new
+      copyright, so the scanned <i>Sacred Books of the East</i> (Mills 1887, Jacobi 1895),
+      Macauliffe's <i>Sikh Religion</i> (1909) and the <i>Babylonian &amp; Assyrian Literature</i>
+      (1901) are as free to use as any Gutenberg text — the OCR step just cleans them, it doesn't
+      relicense them.</li>
   </ul>
   <p>Two honest caveats. "Public domain" is a <em>copyright</em> status, not a claim about
   translation quality or canonical standing — these are the freely-available editions, not
@@ -353,14 +363,14 @@ flowchart LR
   </pre></div>
   <p>The "most shared" ranking uses <b>eff — the effective number of traditions</b>:
   exp(entropy) of the cluster's tradition shares. Intuition: a cluster split 50/50 between
-  two traditions scores exactly 2.0; spread evenly across all ten it would score 10.0; one
-  passage from a tenth tradition barely moves it. It measures <em>even spread</em>, not
+  two traditions scores exactly 2.0; spread evenly across all fifteen it would score 15.0; one
+  passage from a fifteenth tradition barely moves it. It measures <em>even spread</em>, not
   just presence.</p>
   <div class="example">
-    <b>"Freedom through releasing craving"</b> — 77 passages: 44 Buddhist, 26 Hindu, then a
-    scattering of Confucian, Epicurean, Hebrew, and Taoist. Touches six traditions, but
-    Buddhism and Hinduism dominate → eff = 2.8, honestly closer to "two or three traditions"
-    than six.
+    <b>"Freedom through releasing craving"</b> — 108 passages: 47 Buddhist, 31 Hindu, then a
+    scattering of Jain, Sikh, Taoist, Islamic and Confucian. Touches eleven traditions, but
+    Buddhism and Hinduism dominate → eff = 5.0, honestly closer to "five even traditions"
+    than eleven.
   </div>
 
   <h3>The affinities (<code>affinities.html</code>)</h3>
@@ -369,27 +379,31 @@ flowchart LR
   tradition B — <b>compared to what chance would predict from B's size alone?</b></p>
   <div class="fig"><pre class="mermaid">
 flowchart LR
-  A["Christianity's 360 passages&lt;br/&gt;× 10 neighbour slots&lt;br/&gt;= 3,600 looks outward"]:::file --> O["observed:&lt;br/&gt;646 land on Islam"]:::step
-  N["Islam is 518 of 4,379&lt;br/&gt;other passages ≈ 11.8%"]:::file --> E["expected by chance:&lt;br/&gt;3,600 × 11.8% ≈ 426"]:::step
-  O --> L["lift = 646 / 426 = 1.52"]:::page
+  A["Christianity's 360 passages&lt;br/&gt;× 10 neighbour slots&lt;br/&gt;= 3,600 looks outward"]:::file --> O["observed:&lt;br/&gt;563 land on Islam"]:::step
+  N["Islam is 518 of 5,096&lt;br/&gt;other passages ≈ 10.2%"]:::file --> E["expected by chance:&lt;br/&gt;3,600 × 10.2% ≈ 366"]:::step
+  O --> L["lift = 563 / 366 = 1.54"]:::page
   E --> L
-  L --> SYM["symmetrised cell =&lt;br/&gt;mean of both directions&lt;br/&gt;(1.52 + 1.00) / 2 = 1.26"]:::page
+  L --> SYM["symmetrised cell =&lt;br/&gt;mean of both directions&lt;br/&gt;(1.54 + 1.02) / 2 = 1.28"]:::page
   classDef file fill:@FILEBG,stroke:@FILEBR,color:@INK,stroke-width:1.5px
   classDef step fill:@STEPBG,stroke:@STEPBR,color:@INK
   classDef page fill:@PAGEBG,stroke:@PAGEBR,color:@INK,stroke-width:1.5px
   </pre></div>
-  <div class="cap">A real worked example — the strongest cell in the matrix. Note the
-  asymmetry the mean hides (hover any cell to see it): Christian passages reach toward the
-  Quran markedly more (1.52) than Quranic passages reach back (1.00 — dead on chance), since
+  <div class="cap">A real worked example — the strongest cell among the major traditions. Note
+  the asymmetry the mean hides (hover any cell to see it): Christian passages reach toward the
+  Quran markedly more (1.54) than Quranic passages reach back (1.02 — essentially chance), since
   the far larger Islamic corpus has more of its own to echo.</div>
   <p>Lift 1.0 = exactly chance. The normalisation is the whole point: without it, 759-passage
-  Stoicism would dominate every row simply by being everywhere. The quiet headline is that
-  historically linked pairs surface on their own: Christianity↔Islam (1.26),
-  Confucianism↔Taoism (1.19) and Epicureanism↔Stoicism (1.13) are the three strongest cells in
-  the matrix, and Islam↔Zoroastrianism (1.04) sits just above chance too. The one near-miss is
-  Buddhism↔Hinduism (0.98) — Buddhist passages lean Hindu (1.23), but Hindu passages lean back
-  toward their own metaphysics. Nothing in the pipeline knows any history; these convergences
-  re-emerge from meaning alone.</p>
+  Stoicism would dominate every row simply by being everywhere. Two things then surface on their
+  own. First, the largest cells belong to the smallest traditions, where a handful of
+  shared-theme neighbours swings the ratio — Bahá'í↔Mesopotamia (2.71), Ancient Egypt↔Hebrew
+  wisdom (2.28, the very Amenemope→Proverbs borrowing the lineage traces) and
+  Mesopotamia↔Zoroastrianism (2.04) top the matrix. Second, among the pairs with a genuine
+  family tie the affinity rises well above chance regardless of size: Hinduism↔Sikhism (1.65),
+  Buddhism↔Jainism (1.50, the two śramaṇa movements), Confucianism↔Taoism (1.30),
+  Christianity↔Islam (1.28) and Epicureanism↔Stoicism (1.23), with Islam↔Zoroastrianism (1.06)
+  and Buddhism↔Hinduism (1.05) just above it — Buddhist passages lean Hindu (1.25), though Hindu
+  passages lean back toward their own metaphysics (0.84). Nothing in the pipeline knows any
+  history; these convergences re-emerge from meaning alone.</p>
   <p>Clicking a cell ranks the actual passage pairs behind the number (every A-passage's
   neighbour links into B, deduplicated, sorted by cosine) — so the summary statistic is
   always one click from its raw evidence.</p>
@@ -398,14 +412,15 @@ flowchart LR
   <p>The inverse question: which clusters does one tradition dominate <em>beyond its size</em>?
   Also computed at page load. For each tradition T and cluster c (where T has ≥ 3 passages):</p>
   <ul>
-    <li><b>purity</b> = T's share of the cluster ("44 of 77 passages").</li>
+    <li><b>purity</b> = T's share of the cluster ("47 of 108 passages").</li>
     <li><b>lift</b> = purity ÷ T's share of the whole corpus, so small voices can rank.</li>
     <li>ideas are ranked by <b>purity × lift</b>; deliberately <em>no</em> hard purity
-      cut-off — at k=60 Epicureanism's best cluster is only 33% pure (it's 1.5% of the corpus,
-      so that's still 21× its share) and a 70% bar would erase the smallest traditions
+      cut-off — at k=60 Epicureanism's best cluster is only 19% pure (it's 1.3% of the corpus,
+      so that's still 14× its share) and a 70% bar would erase the smallest traditions
       entirely. Instead the purity is printed plainly on every row.</li>
     <li>each card also shows the <b>island share</b> — the % of passages with resonance 0.
-      It spans a wide range: Epicureanism and Christianity 0%, Zoroastrianism 14%.</li>
+      It spans a wide range: Epicureanism, Christianity and Ancient Egypt 0%, Hebrew wisdom and
+      Stoicism 9%.</li>
   </ul>
 
   <h3>The lineage (<code>lineage.html</code>)</h3>
@@ -449,7 +464,7 @@ flowchart LR
   <h2 id="honesty">Caveats &amp; costs</h2>
   <ul>
     <li><b>Everything is corpus-relative.</b> "Distinctly Hindu" means "rare in the other
-      nine text selections here", not "absent from human thought". The Christianity sample
+      fourteen text selections here", not "absent from human thought". The Christianity sample
       is the New Testament's teaching chapters, which likely tilts its affinities toward
       Hebrew wisdom.</li>
     <li><b>Two AI layers sit between you and the text</b>: the gists (which steer the
