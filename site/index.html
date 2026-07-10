@@ -91,6 +91,9 @@
   #panel .who .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
   #panel .who b { color: var(--ink); font-weight: 600; }
   #panel .passage { font-size: 15.5px; line-height: 1.62; }
+  #panel .incorpus { display: inline-block; margin-top: 9px; font-size: 12px; color: var(--ink-2);
+                     text-decoration: none; border-bottom: 1px solid var(--border); }
+  #panel .incorpus:hover { color: var(--ink); }
   #panel .gist {
     margin-top: 14px; padding: 10px 12px; border-radius: 10px;
     background: color-mix(in srgb, var(--ink) 4%, transparent);
@@ -182,6 +185,7 @@
   <a href="distinctives.html">the distinctives →</a>
   <a href="lineage.html">the lineage →</a>
   <a href="methodology.html">how it's made →</a>
+  <a href="corpus.html">the corpus →</a>
   <div class="sub">Passages from the world's classic wisdom texts, embedded and mapped.
     Dots that sit close together say similar things — whatever their tradition.
     Click a dot to see its nearest echoes in <em>other</em> traditions.</div>
@@ -372,6 +376,7 @@
       `<div class="who" style="--c:${COLORS[p.t]}"><span class="dot"></span>` +
       `<span><b>${TRAD[p.t]}</b> · ${data.sources[p.s]} ${p.ref}</span></div>` +
       `<div class="passage">${esc(p.text)}</div>` +
+      `<a class="incorpus" href="corpus.html#p${i}">read in the corpus →</a>` +
       (p.g ? `<div class="gist">“${esc(p.g)}”<span class="tag">the idea, plainly · AI paraphrase</span></div>` : '') +
       `<div class="res">${p.r === 0 ? 'All its nearest neighbours are from its own tradition.'
         : (p.r >= 3 ? '✦ ' : '') + `Nearest neighbours span ${p.r} other tradition${p.r === 1 ? '' : 's'}.`}</div>` +
