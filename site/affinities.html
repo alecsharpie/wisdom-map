@@ -61,20 +61,21 @@
     font-size: 11.5px; font-variant-numeric: tabular-nums;
     cursor: pointer;
   }
-  .cell.diag { background: color-mix(in srgb, var(--ink) 5%, transparent); cursor: default; }
-  .cell:not(.diag):hover { outline: 2px solid var(--ink-2); outline-offset: -1px; }
+  .cell.empty { background: none; cursor: default; pointer-events: none; }
+  .cell:not(.empty):hover { outline: 2px solid var(--ink-2); outline-offset: -1px; }
   .cell.sel { outline: 2px solid var(--ink); outline-offset: -1px; }
   .rowlab, .collab {
     font-size: 12.5px; color: var(--ink-2); display: flex; align-items: center; gap: 6px;
   }
-  .rowlab { justify-content: flex-end; padding-right: 10px; white-space: nowrap; }
-  .collab { height: 118px; align-items: flex-end; justify-content: center; }
+  .rowlab { justify-content: flex-end; padding-right: 10px; white-space: nowrap;
+            position: sticky; left: 0; z-index: 1; background: var(--page); }
+  .corner { position: sticky; left: 0; z-index: 1; background: var(--page); }
+  .collab { height: 132px; align-items: flex-start; justify-content: center; padding-top: 6px; }
   .collab span {
-    writing-mode: vertical-rl; transform: rotate(180deg);
+    writing-mode: vertical-rl;
     display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
   }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
-  .collab .dot { transform: rotate(180deg); }
   #scale { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-size: 12px; color: var(--muted); }
   #ramp { position: relative; width: 220px; height: 10px; border-radius: 5px; overflow: visible; }
   #ramp .bar { position: absolute; inset: 0; border-radius: 5px; }
@@ -133,6 +134,7 @@
     <h1>The Affinities</h1>
     <a href="./">← the map</a>
     <a href="ideas.html">the ideas →</a>
+    <a href="most-shared.html">most shared →</a>
     <a href="distinctives.html">the distinctives →</a>
     <a href="lineage.html">the lineage →</a>
     <a href="methodology.html">how it's made →</a>
@@ -153,7 +155,9 @@
     <span id="hi"></span>
     <span id="scalenote"></span>
   </div>
-  <div id="foot">Neighbour lists are the same top-10 cosine neighbours the map draws
+  <div id="foot">Only the lower triangle is shown — each pair once. Traditions are ordered
+    so kindred ones sit next to each other, which pulls the warmer cells toward the diagonal.
+    Neighbour lists are the same top-10 cosine neighbours the map draws
     as threads. The matrix is symmetrised; hover shows each direction. A caveat:
     Christianity here is sampled from the New Testament's teaching chapters, which may
     lean its row toward Hebrew wisdom. An interpretive curiosity, not a theological claim.</div>
@@ -207,7 +211,28 @@
     return {css: `rgb(${c})`, lum: (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255};
   }
 
-  // ---------- grid ----------
+  // ---------- seriation: order traditions so kindred ones sit together ----------
+  // greedy nearest-neighbour chain grown from the strongest pair (ordering by lift,
+  // held stable across modes so the grid never reshuffles when you toggle).
+  const ORD = (() => {
+    let a0 = 0, b0 = 1, bv = -Infinity;
+    for (let a = 0; a < T; a++) for (let b = a + 1; b < T; b++)
+      if (sym[a][b] > bv) { bv = sym[a][b]; a0 = a; b0 = b; }
+    const chain = [a0, b0], used = new Set(chain);
+    while (used.size < T) {
+      let pick = -1, front = false, score = -Infinity;
+      for (let c = 0; c < T; c++) {
+        if (used.has(c)) continue;
+        if (sym[c][chain[0]] > score) { score = sym[c][chain[0]]; pick = c; front = true; }
+        if (sym[c][chain[chain.length - 1]] > score) { score = sym[c][chain[chain.length - 1]]; pick = c; front = false; }
+      }
+      front ? chain.unshift(pick) : chain.push(pick);
+      used.add(pick);
+    }
+    return chain;
+  })();
+
+  // ---------- grid (lower triangle; each pair shown once) ----------
   let mode = 'lift', selCell = null;
   const grid = document.getElementById('grid');
   const tip = document.getElementById('tip');
@@ -217,41 +242,53 @@
     for (let a = 0; a < T; a++) for (let b = 0; b < T; b++) if (a !== b) m = Math.max(m, M()[a][b]);
     return m;
   };
+  const inSel = (a, b) => selCell &&
+    ((selCell[0] === a && selCell[1] === b) || (selCell[0] === b && selCell[1] === a));
 
   function render() {
     const vmax = offMax();
-    const cs = Math.max(38, Math.min(56, Math.floor((Math.min(innerWidth, 940) - 190) / T)));
+    const cols = T - 1, gap = 2, labelW = 136;
+    const avail = Math.min(document.getElementById('wrap').clientWidth || 860, 860);
+    let cs = Math.floor((avail - labelW - gap * cols) / cols);
+    if (cs < 33) cs = 42;                     // too tight to fit — let #wrap scroll, keep cells comfy
+    cs = Math.max(30, Math.min(64, cs));
     grid.style.setProperty('--cs', cs + 'px');
-    grid.style.gridTemplateColumns = `auto repeat(${T}, ${cs}px)`;
+    grid.style.gridTemplateColumns = `${labelW}px repeat(${cols}, ${cs}px)`;
     grid.innerHTML = '';
-    grid.appendChild(el('div', ''));                       // corner
-    TRAD.forEach((t, b) => {
-      const d = el('div', `<span><span class="dot" style="--c:var(--c${b})"></span>${t}</span>`);
-      d.className = 'collab';
-      grid.appendChild(d);
-    });
-    for (let a = 0; a < T; a++) {
-      const d = el('div', `<span class="dot" style="--c:var(--c${a})"></span>${TRAD[a]}`);
-      d.className = 'rowlab';
-      grid.appendChild(d);
-      for (let b = 0; b < T; b++) {
+    // rows i = 1..T-1, columns j = 0..T-2 ; cell filled when j < i
+    for (let i = 1; i < T; i++) {
+      const ta = ORD[i];
+      const lab = el('div', `<span class="dot" style="--c:var(--c${ta})"></span>${TRAD[ta]}`);
+      lab.className = 'rowlab';
+      grid.appendChild(lab);
+      for (let j = 0; j < cols; j++) {
         const c = document.createElement('div');
-        c.className = 'cell' + (a === b ? ' diag' : '');
-        if (a !== b) {
-          const v = M()[a][b];
+        if (j < i) {
+          const tb = ORD[j];
+          const v = M()[ta][tb];
           const col = rampColor(v / vmax);
+          c.className = 'cell';
           c.style.background = col.css;
           c.style.color = col.lum > 0.62 ? '#0b0b0b' : '#ffffff';
           c.textContent = mode === 'lift' ? v.toFixed(2) : v;
-          c.addEventListener('pointerenter', e => showTip(a, b, e));
-          c.addEventListener('pointermove', e => showTip(a, b, e));
+          c.addEventListener('pointerenter', e => showTip(ta, tb, e));
+          c.addEventListener('pointermove', e => showTip(ta, tb, e));
           c.addEventListener('pointerleave', () => tip.style.display = 'none');
-          c.addEventListener('click', () => select(a, b));
-          if (selCell && ((selCell[0] === a && selCell[1] === b) || (selCell[0] === b && selCell[1] === a)))
-            c.classList.add('sel');
+          c.addEventListener('click', () => select(ta, tb));
+          if (inSel(ta, tb)) c.classList.add('sel');
+        } else {
+          c.className = 'cell empty';
         }
         grid.appendChild(c);
       }
+    }
+    // bottom column labels (traditions ORD[0..T-2])
+    grid.appendChild(el('div', '')).className = 'corner';
+    for (let j = 0; j < cols; j++) {
+      const tb = ORD[j];
+      const d = el('div', `<span><span class="dot" style="--c:var(--c${tb})"></span>${TRAD[tb]}</span>`);
+      d.className = 'collab';
+      grid.appendChild(d);
     }
     // scale
     const stops = [];
