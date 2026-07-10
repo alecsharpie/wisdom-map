@@ -111,25 +111,14 @@
   .pass .who { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; margin-bottom: 3px; }
   .pass .who .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
   .pass .t { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
-  .rank { padding: 11px 10px; margin: 2px -10px 0; border-radius: 10px; cursor: pointer; display: flex; gap: 10px; align-items: baseline; }
-  .rank:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
-  .rank .n { color: var(--muted); font-size: 12px; min-width: 2ch; }
-  .rank .lb { font-size: 14px; }
-  .rank .eff { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
   #close {
     position: absolute; top: 10px; right: 10px;
     width: 30px; height: 30px; border-radius: 8px; border: none;
     background: transparent; color: var(--muted); font-size: 17px; cursor: pointer;
   }
   #close:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); }
-  #rankBtn {
-    position: fixed; right: 16px; bottom: 16px; z-index: 4;
-    padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
-    background: var(--panel); color: var(--ink-2); font-size: 13px; cursor: pointer;
-  }
-  #rankBtn:hover { color: var(--ink); }
   #foot {
-    position: fixed; right: 16px; bottom: 58px; z-index: 3;
+    position: fixed; right: 16px; bottom: 16px; z-index: 3;
     color: var(--muted); font-size: 11.5px; text-align: right; max-width: 40ch;
   }
   #loading { position: fixed; inset: 0; display: grid; place-items: center; color: var(--muted); z-index: 2; }
@@ -141,7 +130,6 @@
     #panel.open { transform: none; }
     #legend { bottom: 12px; left: 12px; right: 12px; }
     .chip { font-size: 11.5px; padding: 3px 9px 3px 7px; }
-    #rankBtn { bottom: auto; top: 46px; right: 12px; }
   }
 </style>
 </head>
@@ -151,6 +139,7 @@
 <header>
   <h1>The Ideas</h1>
   <a href="./">← the map</a>
+  <a href="most-shared.html">most shared →</a>
   <a href="affinities.html">the affinities →</a>
   <a href="distinctives.html">the distinctives →</a>
   <a href="lineage.html">the lineage →</a>
@@ -161,7 +150,6 @@
 </header>
 <div id="legend"></div>
 <div id="tip"></div>
-<button id="rankBtn">✦ most shared ideas</button>
 <div id="foot">Clusters and one-line names are AI-derived (k-means + Opus).
   An interpretive curiosity, not a theological claim.</div>
 <aside id="panel">
@@ -411,30 +399,6 @@
     panelBody.parentElement.scrollTop = 0; panelBody.scrollTop = 0;
   }
 
-  function showRanked() {
-    if (selected >= 0) CL[selected]._g.classList.remove('sel');
-    selected = -1;
-    history.replaceState(null, '', location.pathname);
-    const ranked = [...CL].sort((a, b) => b.eff - a.eff);
-    let html = `<div class="idea-label">Most shared ideas</div>` +
-      `<div class="idea-desc">Ranked by <em>spread</em> — the effective number of traditions an
-       idea's passages are divided among. 10.0 would mean all ten traditions voice it in equal
-       measure; 1.0 means a single tradition owns it. (An idea can touch 9 traditions yet score
-       low if one tradition dominates the count.)</div>`;
-    html += ranked.map((c, i) => {
-      const tops = c.counts.map((n, ti) => [n, ti]).filter(a => a[0]);
-      return `<div class="rank" data-c="${c.id}"><span class="n">${i + 1}</span>` +
-        `<span class="lb">${esc(c.label)}</span><span class="eff">in ${tops.length} · spread ${c.eff.toFixed(1)}</span></div>`;
-    }).join('');
-    panelBody.innerHTML = html;
-    panelBody.querySelectorAll('.rank').forEach(el => {
-      el.onclick = () => select(+el.dataset.c);
-    });
-    panel.classList.add('open');
-    panelBody.scrollTop = 0;
-  }
-
-  document.getElementById('rankBtn').onclick = showRanked;
   document.getElementById('close').onclick = () => select(-1);
   addEventListener('keydown', e => { if (e.key === 'Escape') select(-1); });
 
