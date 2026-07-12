@@ -51,7 +51,11 @@
   h1 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
   header a { color: var(--ink-2); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--border); }
   header a:hover { color: var(--ink); }
-  .sub { color: var(--ink-2); font-size: 13px; max-width: 62ch; margin-bottom: 14px; }
+  .sub { color: var(--ink-2); font-size: 13px; max-width: 62ch; margin-bottom: 10px; }
+  .key { display: flex; flex-wrap: wrap; gap: 6px 8px; max-width: 66ch; margin-bottom: 4px; }
+  .key .ki { font-size: 12px; color: var(--ink-2); background: var(--panel);
+    border: 1px solid var(--border); border-radius: 6px; padding: 3px 9px; line-height: 1.35; }
+  .key .ki b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
   #headline { font-size: 14px; color: var(--ink-2); margin: 14px 0 18px; }
   #headline b { color: var(--ink); font-weight: 600; }
   #modes { display: flex; gap: 6px; margin-bottom: 14px; }
@@ -149,8 +153,12 @@
   </header>
   <div class="sub">Which traditions echo each other most? Each cell counts how often
     a passage's nearest neighbours cross between two traditions, against what chance
-    would predict given their sizes. <b>1.0 = chance</b>; higher means more entangled,
-    lower means the two mostly talk past each other.</div>
+    would predict given their sizes (so a big tradition can't win by volume).</div>
+  <div class="key" aria-label="How to read the numbers">
+    <span class="ki"><b>below&nbsp;1</b> more estranged than chance — they mostly talk past each other</span>
+    <span class="ki"><b>=&nbsp;1.0</b> exactly what chance predicts</span>
+    <span class="ki"><b>above&nbsp;1</b> more entangled — e.g. 2.28 = 2.28× more cross-links than chance</span>
+  </div>
   <div id="headline"></div>
   <div id="modes">
     <button class="mode on" data-m="lift">lift (vs. chance)</button>

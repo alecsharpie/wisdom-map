@@ -134,6 +134,12 @@
     position: fixed; right: 60px; bottom: 16px; z-index: 3;
     color: var(--muted); font-size: 11.5px; text-align: right; max-width: 46ch;
   }
+  #panel .demoBanner {
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px;
+    font-size: 12px; color: var(--ink-2); line-height: 1.45; margin: 0 26px 14px 0;
+  }
+  #panel .demoBanner b { color: var(--ink); font-weight: 600; }
   #loading { position: fixed; inset: 0; display: grid; place-items: center; color: var(--muted); z-index: 2; }
   #ask {
     position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 4;
@@ -193,9 +199,9 @@
   <a href="lineage.html">the lineage →</a>
   <a href="methodology.html">how it's made →</a>
   <a href="corpus.html">the corpus →</a>
-  <div class="sub">Passages from the world's classic wisdom texts, embedded and mapped.
-    Dots that sit close together say similar things — whatever their tradition.
-    Click a dot to see its nearest echoes in <em>other</em> traditions.</div>
+  <div class="sub">Every dot is a passage from a classic wisdom text. Dots that sit
+    close together mean similar things — <em>whatever tradition they came from</em>.
+    Click any dot to draw threads to its nearest echoes in other traditions.</div>
 </header>
 <div id="legend"></div>
 <div id="ask">
@@ -629,8 +635,36 @@
   addEventListener('resize', () => { resize(); placeAsk(); });
   resize(); placeAsk(); fit(); frame();
 
+  // Pick a passage that explains the map at a glance: its nearest echoes fan out
+  // across many *other* traditions (high resonance) and it sits near the centre
+  // (so the auto-pan stays gentle and the whole cloud stays in view).
+  function pickDemo() {
+    let cx = 0, cy = 0;
+    for (const p of P) { cx += p.x; cy += p.y; }
+    cx /= P.length; cy /= P.length;
+    let best = -1, bs = -Infinity;
+    for (let i = 0; i < P.length; i++) {
+      const p = P[i], L = p.text.length;
+      if (L < 60 || L > 190) continue;                  // long enough to read, short enough to fit
+      const score = p.r * 10 - Math.hypot(p.x - cx, p.y - cy) * 30;
+      if (score > bs) { bs = score; best = i; }
+    }
+    return best;
+  }
+
   const m = location.hash.match(/^#p(\d+)$/);
-  if (m && +m[1] < P.length) select(+m[1], true);
+  if (m && +m[1] < P.length) {
+    select(+m[1], true);
+  } else if (W > 720) {
+    // First visit: auto-play one striking passage so the map demonstrates itself.
+    const demo = pickDemo();
+    if (demo >= 0) {
+      select(demo, true);
+      panelBody.insertAdjacentHTML('afterbegin',
+        '<div class="demoBanner">An example to start — one passage and its nearest ' +
+        'echoes in <b>other</b> traditions. Click any dot to explore your own, or ✕ to close.</div>');
+    }
+  }
 })();
 </script>
 </body>
