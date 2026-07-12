@@ -1,8 +1,10 @@
 # Wisdom Map
 
+**Live site → https://alecsharpie.github.io/wisdom-map/**
+
 An interactive map of the ideas humans keep arriving at independently.
-3,635 passages from public-domain wisdom texts across nine traditions are
-embedded and projected to 2D — passages that mean similar things sit close
+**5,097 passages** from public-domain wisdom texts across **15 traditions**
+are embedded and projected to 2D — passages that mean similar things sit close
 together, *whatever tradition they came from*.
 
 To cluster by **idea rather than vocabulary**, each passage is first distilled
@@ -16,80 +18,61 @@ Click a dot and the map draws threads to its nearest echoes in other
 traditions: a Taoist line, a Confucian line, and a verse from Proverbs landing
 on top of each other.
 
-## Sources (all via Project Gutenberg)
+*Interpretive, not authoritative — a curiosity, not a theological claim.*
 
-| Tradition | Text | Translation |
-|---|---|---|
-| Taoism | Tao Te Ching | James Legge |
-| Buddhism | Dhammapada | F. Max Müller |
-| Stoicism | Meditations | Meric Casaubon |
-| Stoicism | Enchiridion | T. W. Higginson |
-| Hebrew wisdom | Proverbs, Ecclesiastes | KJV |
-| Christianity | NT teaching chapters: Matt 5–7, 13, 18, 25; Luke 6, 12, 14–16; John 13–15; Rom 12; 1 Cor 13; James | KJV |
-| Hinduism | Bhagavad Gita | Edwin Arnold |
-| Hinduism | Upanishads (Isa, Katha, Kena) | Swami Paramananda |
-| Confucianism | Analects | James Legge |
-| Islam | Quran — the shorter (chiefly Meccan) suras plus the Night Journey, Luqman, Yā-Sīn, the Merciful, and the Kingdom | J. M. Rodwell |
-| Epicureanism | Letter to Menoeceus, Principal Doctrines | C. D. Yonge (Diogenes Laertius X) |
+## The views
+
+| | |
+|---|---|
+| **The map** (`index.html`) | The embedding scatter. Carries **Ask the Ages** — a search box that embeds your question *in the browser* (transformers.js + bge-small, model fetched once from Hugging Face behind a consent prompt) and lights up the closest passages. No server, $0 per query. |
+| **The ideas** (`ideas.html`) | The same embeddings k-means-clustered into 60 named ideas. Each is a bubble sized by passage count whose ring shows which traditions arrive at it. |
+| **Most shared** (`most-shared.html`) | Ideas ranked by how evenly they spread across traditions (effective number of traditions). The most universal idea now spans ~10.5 effective traditions. |
+| **The affinities** (`affinities.html`) | A 15×15 heatmap of which traditions echo each other most, as observed-vs-expected neighbour lift (1.0 = chance). It "finds" the real lineages — e.g. Ancient Egypt ↔ Hebrew wisdom (Amenemope → Proverbs). |
+| **The distinctives** (`distinctives.html`) | The inverse: what each tradition says that the others here don't, ranked by purity × lift, plus each tradition's *island* share. |
+| **The lineage** (`lineage.html`) | A hand-built *family tree of scripture*: ~30 texts placed left-to-right by date, coloured by the language they were composed in. Solid lines are descent, dashed lines cross-branch influence. |
+| **The corpus** (`corpus.html`) | The full text of every passage, browsable — the raw material, for trust. |
+| **How it's made** (`methodology.html`) | The full pipeline and per-view maths, with diagrams. |
+
+Deep-link a passage with `#p<id>` (e.g. `/#p102`), or a lineage node by id
+(e.g. `lineage.html#quran`).
+
+## Sources
+
+All translations are public domain, via Project Gutenberg and archive.org.
+
+| Tradition | Texts (passages) |
+|---|---|
+| Stoicism | Meditations · Enchiridion |
+| Hebrew wisdom | Proverbs · Ecclesiastes · Pirkei Avot |
+| Confucianism | Analects · Mencius |
+| Islam | Quran (chiefly Meccan suras) · Rumi |
+| Buddhism | Dhammapada · Diamond Sutra |
+| Hinduism | Bhagavad Gita · Upanishads (Isa, Katha, Kena) |
+| Taoism | Zhuangzi (Inner Chapters) · Tao Te Ching |
+| Christianity | NT teaching chapters (Matt, Luke, John, Romans, 1 Cor, James) |
+| Zoroastrianism | Gāthās |
+| Jainism | Uttarādhyayana |
+| Bahá'í | Tablets of Abdul-Baha |
+| Sikhism | Adi Granth (Macauliffe) |
+| Mesopotamia | Babylonian & Assyrian hymns and psalms |
+| Ancient Egypt | Maxims of Ptah-hotep · Instruction of Ke'gemni |
+| Epicureanism | Letter to Menoeceus · Principal Doctrines |
 
 (The Gospel of Thomas from the original notes was dropped — the ancient text
 is public domain but every complete English translation is modern and
 copyrighted. The Sermon on the Mount and the Enchiridion stand in.)
 
-## Five views
+## Run it locally
 
-- **The map** (`site/index.html`) — the embedding scatter described above. It
-  also carries **Ask the Ages**: a search box that embeds your question
-  *in the browser* (transformers.js + bge-small, ~34 MB model downloaded from
-  Hugging Face on first use, then cached) and lights up the closest passages —
-  no server, $0 per query. The corpus side is `site/search.bin`, an
-  int8-quantised 384-d re-embedding of all passages
-  (`pipeline/embed_search.py`) so queries and passages share a shippable space;
-  the map itself stays on bge-large.
-- **The affinities** (`site/affinities.html`) — a 9×9 heatmap of which
-  traditions echo each other most, computed in the browser from the map's
-  neighbour lists as observed-vs-expected lift (1.0 = chance, so a large
-  tradition can't win by volume). Click a cell for the strongest actual
-  passage pairs behind it. Closest pair: Christianity ↔ Islam; most
-  estranged: Islam ↔ Taoism.
-- **The distinctives** (`site/distinctives.html`) — the inverse of the ideas
-  view: what each tradition says that the others here don't. The 60 idea
-  clusters ranked per tradition by purity × lift, plus each tradition's
-  *island* share (passages whose ten nearest neighbours are all
-  home-tradition).
-- **The ideas** (`site/ideas.html`) — the higher-level view: the same embeddings
-  k-means-clustered into 60 named ideas. Each idea is a bubble sized by passage
-  count whose ring shows which traditions arrive at it; a "most shared ideas"
-  list ranks ideas by how evenly they spread across traditions (effective number
-  of traditions). Click a bubble for its composition and passages, grouped by
-  tradition. Cluster names are Opus one-liners (`pipeline/ideas.py`, cached in
-  `data/idea_labels.json`).
-- **The lineage** (`site/lineage.html`) — a *family tree of scripture*: ~30 major
-  religious texts and traditions placed left-to-right by date and coloured by the
-  language they were composed in (Semitic, Hellenic, Indo-Aryan, Iranian, Sinitic…).
-  Solid lines are descent, dashed lines are cross-branch influence. Hover a node to
-  trace its ancestry; click for language, place of origin, date, and parents/children.
-  It's a hand-built, self-contained SVG (no data pipeline) — the data lives inline in
-  the file. The two pages link to each other from the header.
-
-## Run it
-
-The site is fully static; `site/data.json` is precomputed.
+The site is fully static; everything under `site/` is precomputed.
 
 ```sh
 cd site && python3 -m http.server 8643
-# map + search:  http://localhost:8643/
-# ideas:         http://localhost:8643/ideas.html
-# affinities:    http://localhost:8643/affinities.html
-# distinctives:  http://localhost:8643/distinctives.html
-# lineage:       http://localhost:8643/lineage.html
+# then open http://localhost:8643/
 ```
 
 (The search box is the one feature that isn't fully offline — it fetches the
 embedding model from Hugging Face's CDN on first use, behind a consent prompt.)
-
-Deep-link a passage with `#p<id>` (e.g. `/#p102`), or a lineage node by id
-(e.g. `lineage.html#quran`).
 
 ## Rebuild the data
 
@@ -103,21 +86,17 @@ uv run pipeline/embed_search.py      # bge-small re-embed -> site/search.bin
 ```
 
 The distill step calls `claude -p` (Opus) in 60-passage batches; it tracks and
-prints total cost (~$3.50 for the full corpus), caches per passage, and stops
-if a probe batch projects past its budget. The embed step is a self-contained
-uv script (sentence-transformers `BAAI/bge-large-en-v1.5`, UMAP with a fixed
-seed); embeddings are cached in `data/` keyed by content hash, so re-runs are
-fast.
+prints total cost, caches per passage, and stops if a probe batch projects past
+its budget. The embed step is a self-contained `uv` script
+(sentence-transformers `BAAI/bge-large-en-v1.5`, UMAP with a fixed seed);
+embeddings are cached by content hash, so re-runs are fast. Non-Gutenberg
+scanned sources (the Gāthās, Uttarādhyayana, Adi Granth, Mesopotamian hymns)
+are extracted from archive.org OCR by `pipeline/ocr_extract.py`.
 
 Each passage in `data.json` carries its top-10 cosine neighbours and a
-**resonance** score: how many *other* traditions appear among those
-neighbours.
+**resonance** score: how many *other* traditions appear among those neighbours.
 
-## Ideas not built yet
+## Deployment
 
-- More traditions: Rumi, Zhuangzi, Pirkei Avot, Seneca's letters…
-
-(The original project descriptions for the search, affinities, and
-distinctives views live in `docs/` — all three were built 2026-07-09.)
-
-*Interpretive, not authoritative — a curiosity, not a theological claim.*
+The static `site/` directory is published to GitHub Pages by
+`.github/workflows/pages.yml` on every push to `main`.
