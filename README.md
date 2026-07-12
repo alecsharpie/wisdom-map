@@ -1,6 +1,6 @@
 # Wisdom Map
 
-**Live site → https://alecsharpie.github.io/wisdom-map/**
+**Live site → https://www.alecsharpie.me/wisdom-map/**
 
 An interactive map of the ideas humans keep arriving at independently.
 **5,097 passages** from public-domain wisdom texts across **15 traditions**
