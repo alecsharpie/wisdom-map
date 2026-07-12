@@ -13,28 +13,32 @@
 <title>Wisdom Map</title>
 <style>
   :root {
-    --surface: #fcfcfb;
-    --page: #f9f9f7;
-    --ink: #0b0b0b;
-    --ink-2: #52514e;
-    --muted: #898781;
-    --hairline: #e1e0d9;
-    --border: rgba(11,11,11,0.10);
-    --panel: #ffffff;
+    --surface: #fcfaf5;
+    --page: #f6f3ec;
+    --ink: #1a1815;
+    --ink-2: #57544d;
+    --muted: #918e85;
+    --hairline: #e5e1d6;
+    --border: rgba(26,24,21,0.10);
+    --panel: #fffdf8;
+    --glow: rgba(255,254,249,0.72);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, ui-serif, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
     --c0: #2a78d6; --c1: #df6317; --c2: #1baf7a; --c3: #e34948; --c4: #0e93a8;
     --c5: #eda100; --c6: #4a3aa7; --c7: #7e991c; --c8: #b02d8f; --c9: #008300;
     --c10: #8b4ec8; --c11: #a06a1e; --c12: #e87ba4; --c13: #6172d6; --c14: #b03b57;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --surface: #1a1a19;
-      --page: #0d0d0d;
-      --ink: #ffffff;
-      --ink-2: #c3c2b7;
-      --muted: #898781;
-      --hairline: #2c2c2a;
-      --border: rgba(255,255,255,0.10);
-      --panel: #222221;
+      --surface: #1b1a17;
+      --page: #0c0b09;
+      --ink: #f3efe6;
+      --ink-2: #c3c0b4;
+      --muted: #8a877e;
+      --hairline: #2c2b27;
+      --border: rgba(243,239,230,0.10);
+      --panel: #211f1b;
+      --glow: rgba(78,68,52,0.30);
       --c0: #3987e5; --c1: #d16a18; --c2: #199e70; --c3: #e66767; --c4: #1490a5;
       --c5: #c98500; --c6: #9085e9; --c7: #869a2b; --c8: #d45cae; --c9: #008300;
       --c10: #9866d8; --c11: #b07b2e; --c12: #d55181; --c13: #7182e2; --c14: #d76f88;
@@ -43,8 +47,10 @@
   * { box-sizing: border-box; margin: 0; }
   html, body { height: 100%; }
   body {
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-    background: var(--page);
+    font: 15px/1.5 var(--sans);
+    background:
+      radial-gradient(125% 105% at 50% 40%, var(--glow) 0%, transparent 62%),
+      var(--page);
     color: var(--ink);
     overflow: hidden;
   }
@@ -55,9 +61,10 @@
     pointer-events: none;
   }
   header > * { pointer-events: auto; }
-  h1 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
-  header a { color: var(--ink-2); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--border); }
-  header a:hover { color: var(--ink); }
+  h1 { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: 0; }
+  header a { color: var(--ink-2); font-size: 13px; text-decoration: none;
+             border-bottom: 1px solid transparent; transition: color .15s, border-color .15s; }
+  header a:hover { color: var(--ink); border-bottom-color: var(--border); }
   .sub { color: var(--ink-2); font-size: 13px; max-width: 52ch; }
   #legend {
     position: fixed; left: 20px; bottom: 16px; z-index: 4;
@@ -78,12 +85,12 @@
   #map.dragging { cursor: grabbing; }
   #tip {
     position: fixed; z-index: 5; max-width: 340px;
-    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.14);
-    padding: 10px 12px; font-size: 13px; line-height: 1.45;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.16);
+    padding: 11px 14px; font-family: var(--serif); font-size: 14.5px; line-height: 1.5;
     pointer-events: none; display: none;
   }
-  #tip .who { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  #tip .who { font-family: var(--sans); display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
   #tip .who .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
   #panel {
     position: fixed; top: 0; right: 0; bottom: 0; z-index: 6;
@@ -93,20 +100,20 @@
     display: flex; flex-direction: column;
   }
   #panel.open { transform: none; box-shadow: -12px 0 40px rgba(0,0,0,0.12); }
-  #panel .scroll { overflow-y: auto; padding: 18px 20px 28px; }
+  #panel .scroll { overflow-y: auto; padding: 22px 24px 34px; }
   #panel .who { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin: 2px 26px 10px 0; }
   #panel .who .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
   #panel .who b { color: var(--ink); font-weight: 600; }
-  #panel .passage { font-size: 15.5px; line-height: 1.62; }
+  #panel .passage { font-family: var(--serif); font-size: 18.5px; line-height: 1.68; letter-spacing: .003em; color: var(--ink); }
   #panel .incorpus { display: inline-block; margin-top: 9px; font-size: 12px; color: var(--ink-2);
                      text-decoration: none; border-bottom: 1px solid var(--border); }
   #panel .incorpus:hover { color: var(--ink); }
   #panel .gist {
-    margin-top: 14px; padding: 10px 12px; border-radius: 10px;
+    margin-top: 16px; padding: 12px 14px; border-radius: 10px;
     background: color-mix(in srgb, var(--ink) 4%, transparent);
-    color: var(--ink-2); font-size: 13.5px; line-height: 1.5; font-style: italic;
+    color: var(--ink-2); font-family: var(--serif); font-size: 15px; line-height: 1.55; font-style: italic;
   }
-  #panel .gist .tag { display: block; margin-top: 5px; font-style: normal; font-size: 11px; color: var(--muted); }
+  #panel .gist .tag { display: block; margin-top: 6px; font-family: var(--sans); font-style: normal; font-size: 11px; color: var(--muted); }
   #panel .res { margin-top: 12px; color: var(--muted); font-size: 12.5px; }
   #panel h2 {
     font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.07em;
@@ -117,7 +124,7 @@
   .nb .who { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; margin: 0 0 3px; }
   .nb .who .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
   .nb .who .sim { margin-left: auto; font-variant-numeric: tabular-nums; }
-  .nb .t { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+  .nb .t { font-family: var(--serif); font-size: 14.5px; line-height: 1.56; color: var(--ink-2); }
   #close {
     position: absolute; top: 10px; right: 10px;
     width: 30px; height: 30px; border-radius: 8px; border: none;
