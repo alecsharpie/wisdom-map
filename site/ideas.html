@@ -192,7 +192,7 @@
   const panelBody = document.getElementById('panelBody');
   const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-  let selected = -1;
+  let selected = -1, pressed = -1;
   const active = TRAD.map(() => false);   // chip filter: highlight ideas containing tradition
 
   // ---------- legend ----------
@@ -352,10 +352,16 @@
         text.appendChild(ts);
       });
       g.appendChild(text);
-      g.addEventListener('pointerenter', e => { svg.appendChild(g); showTip(c, e); });
+      // raise the hovered bubble above its neighbours — but only when it isn't already on
+      // top, so we don't churn the DOM on every pointer event
+      g.addEventListener('pointerenter', e => { if (g !== svg.lastChild) svg.appendChild(g); showTip(c, e); });
       g.addEventListener('pointermove', e => showTip(c, e));
       g.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
-      g.addEventListener('click', () => select(c.id));
+      // Select on pointerup, not click: re-stacking a bubble's node on hover moves it in the
+      // DOM, which makes Chrome silently drop the synthesized click. Track the press target
+      // ourselves and fire when the release lands on the same bubble.
+      g.addEventListener('pointerdown', () => { pressed = c.id; });
+      g.addEventListener('pointerup', () => { if (pressed === c.id) select(c.id); pressed = -1; });
       c._g = g;
       svg.appendChild(g);
     }
